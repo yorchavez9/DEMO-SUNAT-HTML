@@ -1,0 +1,355 @@
+/* ─────────────────────────────────────────────────────────
+   TIPOGRAFÍA BASE — Inter + rendering limpio
+   ───────────────────────────────────────────────────────── */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-weight: 500;
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  letter-spacing: -0.005em;
+  background-color: rgb(248 250 252);
+  color: rgb(15 23 42);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+h1 { font-weight: 800; }
+h2 { font-weight: 700; }
+
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', 'Cascadia Code', ui-monospace, Consolas, monospace;
+}
+
+/* ─────────────────────────────────────────────────────────
+   BOTONES
+   ───────────────────────────────────────────────────────── */
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: all 0.15s;
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  white-space: nowrap;
+}
+.btn:active:not(:disabled),
+.btn-primary:active:not(:disabled),
+.btn-secondary:active:not(:disabled),
+.btn-danger:active:not(:disabled),
+.btn-ghost:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.btn:disabled,
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-danger:disabled,
+.btn-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn:focus-visible,
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-danger:focus-visible,
+.btn-ghost:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px rgb(59 130 246);
+}
+
+.btn-primary {
+  background-color: rgb(37 99 235);
+  color: white;
+  box-shadow: 0 1px 2px rgb(37 99 235 / 0.3), 0 2px 4px -1px rgb(37 99 235 / 0.2);
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: rgb(29 78 216);
+  box-shadow: 0 2px 4px rgb(37 99 235 / 0.4), 0 4px 8px -2px rgb(37 99 235 / 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: rgb(241 245 249);
+  color: rgb(30 41 59);
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: rgb(226 232 240);
+}
+
+.btn-danger {
+  background-color: rgb(220 38 38);
+  color: white;
+}
+.btn-danger:hover:not(:disabled) {
+  background-color: rgb(185 28 28);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: rgb(51 65 85);
+  box-shadow: none;
+}
+.btn-ghost:hover:not(:disabled) {
+  background-color: rgb(241 245 249);
+}
+
+/* ─────────────────────────────────────────────────────────
+   INPUTS / SELECT / TEXTAREA
+   ───────────────────────────────────────────────────────── */
+.input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(15 23 42);
+  background-color: rgb(241 245 249);
+  border: none;
+  border-radius: 0.75rem;
+  transition: all 0.15s;
+}
+.input::placeholder {
+  color: rgb(148 163 184);
+  font-weight: 400;
+}
+.input:hover:not(:disabled):not(:focus) {
+  background-color: rgb(226 232 240);
+}
+.input:focus {
+  outline: none;
+  background-color: white;
+  box-shadow: 0 0 0 4px rgb(59 130 246 / 0.2);
+}
+.input:disabled {
+  background-color: rgb(248 250 252);
+  color: rgb(148 163 184);
+  cursor: not-allowed;
+}
+
+select.input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1.1rem;
+  padding-right: 2.5rem;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.input-inline {
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 0.375rem;
+  background: transparent;
+  transition: all 0.15s;
+}
+.input-inline:hover:not(:focus) {
+  background-color: rgb(241 245 249);
+}
+.input-inline:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(59 130 246 / 0.2);
+  background-color: white;
+}
+
+.label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgb(71 85 105);
+  margin-bottom: 0.375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ─────────────────────────────────────────────────────────
+   CARD + TABLAS
+   ───────────────────────────────────────────────────────── */
+.card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.06), 0 4px 20px -4px rgb(15 23 42 / 0.04);
+}
+@media (min-width: 768px) {
+  .card { padding: 1.5rem; }
+}
+
+.table-std {
+  width: 100%;
+  font-size: 0.875rem;
+  border-collapse: collapse;
+}
+.table-std thead {
+  background-color: rgb(248 250 252);
+}
+.table-std thead th {
+  padding: 0.75rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgb(51 65 85);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+.table-std tbody td {
+  padding: 0.75rem;
+  font-weight: 500;
+  color: rgb(30 41 59);
+}
+.table-std tbody tr {
+  transition: background-color 0.15s;
+}
+.table-std tbody tr:hover {
+  background-color: rgb(248 250 252);
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin-left: -1.25rem;
+  margin-right: -1.25rem;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+@media (min-width: 768px) {
+  .table-wrap {
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   UTILIDADES
+   ───────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: rgb(15 23 42);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.025em;
+}
+@media (min-width: 768px) {
+  .page-title { font-size: 1.875rem; }
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgb(15 23 42);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  letter-spacing: -0.015em;
+}
+@media (min-width: 768px) {
+  .section-title { font-size: 1.125rem; }
+}
+
+/* Sidebar link */
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(51 65 85);
+  transition: all 0.15s;
+  text-decoration: none;
+  cursor: pointer;
+}
+.nav-link:hover:not(.active) {
+  background-color: rgb(241 245 249);
+}
+.nav-link.active {
+  background-color: rgb(37 99 235);
+  color: white;
+  box-shadow: 0 1px 2px rgb(59 130 246 / 0.3);
+}
+
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgb(148 163 184);
+  padding: 0 0.75rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Spin animation for Lucide icons */
+.icon-spin {
+  animation: icon-spin 1s linear infinite;
+}
+@keyframes icon-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgb(226 232 240);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(203 213 225);
+  background-clip: content-box;
+  border: 2px solid transparent;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
