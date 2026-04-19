@@ -83,7 +83,7 @@ var App = window.App || (window.App = {});
               + App.escapeHtml(d.cliente.razon_social) + '</span>' : '')
           + (total !== undefined ? '<span style="color: rgb(203 213 225);">·</span>'
               + '<span class="font-bold" style="color: rgb(15 23 42);">'
-              + App.escapeHtml(d.tipo_moneda || 'PEN') + ' ' + parseFloat(total).toFixed(2) + '</span>' : '')
+              + App.fmtMoney(total, d.tipo_moneda) + '</span>' : '')
           + (estado ? App.estadoBadgeHTML(estado) : '')
         + '</div>';
     }

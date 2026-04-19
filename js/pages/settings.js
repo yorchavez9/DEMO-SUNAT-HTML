@@ -88,7 +88,7 @@ App.Settings = class Settings {
             + '<div><strong>Empresa:</strong> ' + App.escapeHtml(e.razon_social) + '</div>'
             + '<div><strong>RUC:</strong> ' + App.escapeHtml(e.ruc) + '</div>'
             + '<div><strong>Plan:</strong> ' + App.escapeHtml(e.plan) + '</div>'
-            + '<div><strong>Entorno:</strong> ' + App.escapeHtml(e.environment) + '</div>'
+            + '<div><strong>Entorno:</strong> ' + App.escapeHtml(e.entorno) + '</div>'
           + '</div>'
           + '<button id="s-goto-dashboard" class="btn-primary text-sm" style="margin-top: 0.75rem;">'
             + 'Ir al Dashboard <i data-lucide="arrow-right" class="w-4 h-4"></i>'
@@ -152,19 +152,8 @@ App.Settings = class Settings {
     this._bind();
 
     try {
-      var response = await fetch(this.config.base_url.replace(/\/$/, '') + '/empresa', {
-        headers: {
-          'Accept': 'application/json',
-          'X-Api-Key': this.config.api_key,
-          'X-Api-Secret': this.config.api_secret,
-        },
-      });
-      var data = await response.json();
-      if (response.ok && data.success) {
-        this.testResult = { success: true, empresa: data.data };
-      } else {
-        this.testResult = { success: false, error: data.message || ('Error ' + response.status) };
-      }
+      var res = await App.api.getEmpresa();
+      this.testResult = { success: true, empresa: res.data };
     } catch (e) {
       this.testResult = { success: false, error: e.message };
     } finally {

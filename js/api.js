@@ -32,18 +32,25 @@ var App = window.App || (window.App = {});
       return await response.blob();
     }
 
-    var data = await response.json();
+    var raw = await response.json();
 
-    if (!response.ok) {
-      var msg = data.message || ('Error ' + response.status);
+    var normalized = {
+      success: raw.estado === 'exito' || raw.success === true,
+      message: raw.mensaje != null ? raw.mensaje : raw.message,
+      data: raw.datos != null ? raw.datos : raw.data,
+      errors: raw.errores != null ? raw.errores : raw.errors,
+    };
+
+    if (!response.ok || !normalized.success) {
+      var msg = normalized.message || ('Error ' + response.status);
       var err = new Error(msg);
       err.status = response.status;
-      err.errors = data.errors;
-      err.data = data;
+      err.errors = normalized.errors;
+      err.data = normalized;
       throw err;
     }
 
-    return data;
+    return normalized;
   }
 
   App.api = {

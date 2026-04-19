@@ -286,7 +286,7 @@ App.NewSummaryModal = class NewSummaryModal {
                   + '<span class="font-mono font-bold" style="color: rgb(15 23 42);">' + App.escapeHtml(b.numero_completo) + '</span>'
                   + '<span class="text-xs" style="color: rgb(100 116 139);">' + App.escapeHtml((b.fecha_emision || '').slice(0, 10)) + '</span>'
                   + '<span class="font-bold" style="color: rgb(51 65 85);">'
-                    + App.escapeHtml(b.tipo_moneda || 'PEN') + ' ' + parseFloat((b.totales && b.totales.total) || 0).toFixed(2)
+                    + App.fmtMoney((b.totales && b.totales.total) || 0, b.tipo_moneda)
                   + '</span>'
                 + '</div>'
                 + '<div class="text-xs" style="color: rgb(100 116 139); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">'
@@ -379,7 +379,7 @@ App.NewSummaryModal = class NewSummaryModal {
     this.loadingBoletas = true;
     try {
       var res = await App.api.listarBoletas('?estado=aceptado&por_pagina=50');
-      this.boletasDisponibles = (res.data && res.data.data) || [];
+      this.boletasDisponibles = (res.data && res.data.datos) || [];
     } catch (e) {
       this.error = e.message;
     } finally {

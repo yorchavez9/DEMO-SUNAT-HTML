@@ -14,7 +14,13 @@ App.fmtMoney = function (value, moneda) {
   moneda = moneda || 'PEN';
   var n = parseFloat(value) || 0;
   var simbolo = moneda === 'USD' ? '$' : moneda === 'EUR' ? '€' : 'S/';
-  return simbolo + ' ' + n.toFixed(2);
+  return simbolo + ' ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+App.fmtNumber = function (value, decimals) {
+  var d = decimals === undefined ? 2 : decimals;
+  var n = parseFloat(value) || 0;
+  return n.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 };
 
 App.todayISO = function () {

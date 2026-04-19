@@ -11,6 +11,13 @@ var App = window.App || (window.App = {});
 
   var COLORS_MONEDA = ['#2563eb', '#f59e0b', '#8b5cf6', '#06b6d4'];
 
+  var TIPO_LABEL = {
+    factura: 'Factura',
+    boleta: 'Boleta',
+    nota_credito: 'Nota Crédito',
+    nota_debito: 'Nota Débito',
+  };
+
   App.Dashboard = class Dashboard {
     constructor() {
       this.indicadores = null;
@@ -39,7 +46,7 @@ var App = window.App || (window.App = {});
           App.api.panelPorMoneda().catch(function () { return null; }),
         ]);
         if (results[0] && results[0].data) this.indicadores = results[0].data;
-        if (results[1] && results[1].data) this.recientes = results[1].data;
+        if (results[1] && results[1].data && results[1].data.documentos) this.recientes = results[1].data.documentos;
         if (results[2] && results[2].data) this.ventasMes = results[2].data;
         if (results[3] && results[3].data) this.estadoSunat = results[3].data;
         if (results[4] && results[4].data) this.porMoneda = results[4].data;
@@ -113,7 +120,7 @@ var App = window.App || (window.App = {});
       return '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1.5rem;" class="kpi-grid-4">'
         + this._kpiCardHTML('Ventas hoy', i.hoy && i.hoy.ventas, i.hoy && i.hoy.documentos)
         + this._kpiCardHTML('Esta semana', i.semana && i.semana.ventas, i.semana && i.semana.documentos)
-        + this._kpiCardHTML('Mes actual', i.mes_actual && i.mes_actual.ventas, i.mes_actual && i.mes_actual.documentos, { highlight: true })
+        + this._kpiCardHTML('Mes actual', i.mes_actual && i.mes_actual.ventas, i.mes_actual && i.mes_actual.documentos)
         + this._kpiCardHTML('Vs mes anterior', i.crecimiento && i.crecimiento.vs_mes_anterior, undefined, { isGrowth: true, suffix: '%' })
         + '</div>';
     }
@@ -124,7 +131,7 @@ var App = window.App || (window.App = {});
       var suffix = opts.suffix || '';
       var highlight = !!opts.highlight;
       var n = (value !== undefined && value !== null) ? parseFloat(value) : null;
-      var formatted = n !== null ? n.toFixed(2) : '0.00';
+      var formatted = n !== null ? App.fmtNumber(n) : '0.00';
       var positive = isGrowth && (n || 0) > 0;
       var negative = isGrowth && (n || 0) < 0;
       var prefix = isGrowth ? '' : 'S/ ';
@@ -149,7 +156,7 @@ var App = window.App || (window.App = {});
             + (total !== undefined
               ? '<div style="text-align: right;">'
                 + '<div style="font-size: 0.625rem; font-weight: 700; color: rgb(100 116 139); text-transform: uppercase; letter-spacing: 0.05em;">Total</div>'
-                + '<div style="font-size: 1.125rem; font-weight: 800; color: rgb(15 23 42);">S/ ' + parseFloat(total).toFixed(2) + '</div>'
+                + '<div style="font-size: 1.125rem; font-weight: 800; color: rgb(15 23 42);">' + App.fmtMoney(total) + '</div>'
               + '</div>'
               : '')
           + '</div>'
@@ -185,11 +192,11 @@ var App = window.App || (window.App = {});
     _recientesHTML() {
       var rows = this.recientes.slice(0, 10).map(function (d) {
         return '<tr>'
-          + '<td>' + App.escapeHtml(d.tipo_descripcion || '') + '</td>'
-          + '<td class="font-mono">' + App.escapeHtml(d.numero_completo || '') + '</td>'
+          + '<td>' + App.escapeHtml(TIPO_LABEL[d.tipo] || d.tipo || '') + '</td>'
+          + '<td class="font-mono">' + App.escapeHtml(d.numero || '') + '</td>'
           + '<td style="max-width: 20rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + App.escapeHtml(d.cliente || '') + '</td>'
-          + '<td style="text-align: right;">S/ ' + parseFloat(d.monto_total || 0).toFixed(2) + '</td>'
-          + '<td>' + App.estadoBadgeHTML(d.sunat_status) + '</td>'
+          + '<td style="text-align: right;">' + App.fmtMoney(d.total || 0, d.moneda) + '</td>'
+          + '<td>' + App.estadoBadgeHTML(d.estado_sunat) + '</td>'
           + '</tr>';
       }).join('');
 
@@ -252,7 +259,7 @@ var App = window.App || (window.App = {});
                   bodyFont: { size: 12 },
                   displayColors: false,
                   callbacks: {
-                    label: function (ctx) { return 'S/ ' + parseFloat(ctx.parsed.y).toFixed(2); },
+                    label: function (ctx) { return App.fmtMoney(ctx.parsed.y); },
                   },
                 },
               },
@@ -370,7 +377,7 @@ var App = window.App || (window.App = {});
                     label: function (ctx) {
                       var doc = 0;
                       var m = ctx.chart.config.data.datasets[0];
-                      return ' ' + ctx.label + ': ' + parseFloat(ctx.parsed).toFixed(2);
+                      return ' ' + ctx.label + ': ' + App.fmtNumber(ctx.parsed);
                     },
                   },
                 },

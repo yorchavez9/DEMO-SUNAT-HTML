@@ -114,7 +114,7 @@ var App = window.App || (window.App = {});
         + '<td class="font-mono font-semibold" style="color: rgb(15 23 42);">' + App.escapeHtml(numero) + '</td>'
         + '<td style="color: rgb(71 85 105);">' + App.escapeHtml((d.fecha_emision || '').slice(0, 10)) + '</td>'
         + '<td style="max-width: 20rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + App.escapeHtml(clienteNombre) + '</td>'
-        + '<td style="text-align: right; font-weight: 700; color: rgb(15 23 42);">' + App.escapeHtml(d.tipo_moneda || 'PEN') + ' ' + parseFloat(total).toFixed(2) + '</td>'
+        + '<td style="text-align: right; font-weight: 700; color: rgb(15 23 42);">' + App.fmtMoney(total, d.tipo_moneda) + '</td>'
         + '<td>' + App.estadoBadgeHTML(estado) + '</td>'
         + '<td><div style="display: flex; align-items: center; gap: 0.25rem;">'
           + actionBtn('pdf', 'file-text', 'PDF', 'color: rgb(37 99 235);')
@@ -161,7 +161,7 @@ var App = window.App || (window.App = {});
         if (this.filtro.buscar) params.append('buscar', this.filtro.buscar);
         var query = params.toString() ? ('?' + params.toString()) : '';
         var res = await App.api[this.config.method](query);
-        this.docs = Array.isArray(res.data) ? res.data : ((res.data && res.data.data) || []);
+        this.docs = Array.isArray(res.data) ? res.data : ((res.data && res.data.datos) || []);
       } catch (e) {
         this.error = e.message;
       } finally {
