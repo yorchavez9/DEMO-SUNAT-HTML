@@ -14,6 +14,7 @@ var App = window.App || (window.App = {});
       };
       this.cliente = Object.assign({}, CLIENTE_ANONIMO);
       this.items = [];
+      this.cuotas = [];
       this.sending = false;
       this.pdfFormat = 'ticket-80';
       this.container = null;
@@ -51,6 +52,13 @@ var App = window.App || (window.App = {});
                     + '<option value="Credito"' + (f.forma_pago === 'Credito' ? ' selected' : '') + '>Crédito</option>'
                   + '</select></div>'
               + '</div>'
+            + '</div>'
+            + '<div id="b-cuotas-section" class="card" style="display: ' + (f.forma_pago === 'Credito' ? 'block' : 'none') + ';">'
+              + '<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">'
+                + '<h2 class="section-title" style="margin-bottom: 0;">Cuotas de pago</h2>'
+                + '<button type="button" id="b-add-cuota" class="btn-primary text-sm"><i data-lucide="plus" class="w-4 h-4"></i> Agregar cuota</button>'
+              + '</div>'
+              + '<div id="b-cuotas-rows">' + this._cuotasRowsHTML() + '</div>'
             + '</div>'
             + '<div class="card">'
               + '<h2 class="section-title">Cliente</h2>'
@@ -121,7 +129,14 @@ var App = window.App || (window.App = {});
         self.form.tipo_moneda = e.target.value;
         self._refreshItemsTable();
       });
-      this.container.querySelector('#b-pago').addEventListener('change', function (e) { self.form.forma_pago = e.target.value; });
+      this.container.querySelector('#b-pago').addEventListener('change', function (e) {
+        self.form.forma_pago = e.target.value;
+        var section = self.container.querySelector('#b-cuotas-section');
+        if (section) section.style.display = e.target.value === 'Credito' ? 'block' : 'none';
+      });
+      var addCuotaBtn = this.container.querySelector('#b-add-cuota');
+      if (addCuotaBtn) addCuotaBtn.addEventListener('click', function () { self._addCuota(); });
+      this._bindCuotasRows();
       this.container.querySelector('#b-obs').addEventListener('input', function (e) { self.form.observacion = e.target.value; });
 
       this.container.querySelector('#b-anonimo').addEventListener('click', function () {
@@ -149,6 +164,58 @@ var App = window.App || (window.App = {});
       });
 
       App.bindPdfFormatPicker(this.container, function () { return self.pdfFormat; }, function (v) { self.pdfFormat = v; });
+    }
+
+    _cuotasRowsHTML() {
+      if (this.cuotas.length === 0) {
+        return '<p style="font-size: 0.875rem; color: rgb(100 116 139);">Agrega al menos una cuota.</p>';
+      }
+      return this.cuotas.map(function (c, i) {
+        return '<div style="display: flex; gap: 0.5rem; align-items: flex-end; margin-bottom: 0.5rem;">'
+          + '<div style="flex: 1;"><label class="label">Fecha pago</label>'
+            + '<input type="date" data-ci="' + i + '" data-cf="fecha_pago" class="input" value="' + App.escapeHtml(c.fecha_pago) + '" /></div>'
+          + '<div style="flex: 1;"><label class="label">Monto</label>'
+            + '<input type="number" data-ci="' + i + '" data-cf="monto" class="input" value="' + App.escapeHtml(String(c.monto)) + '" placeholder="0.00" min="0.01" step="0.01" /></div>'
+          + '<button type="button" data-cd="' + i + '" style="padding: 0.375rem; color: rgb(239 68 68); background: transparent; border: none; cursor: pointer; flex-shrink: 0; margin-bottom: 2px;">'
+            + '<i data-lucide="x" class="w-4 h-4"></i></button>'
+        + '</div>';
+      }).join('');
+    }
+
+    _refreshCuotasRows() {
+      var rows = this.container.querySelector('#b-cuotas-rows');
+      if (rows) {
+        rows.innerHTML = this._cuotasRowsHTML();
+        this._bindCuotasRows();
+        App.refreshIcons();
+      }
+    }
+
+    _bindCuotasRows() {
+      var self = this;
+      var rows = this.container.querySelector('#b-cuotas-rows');
+      if (!rows) return;
+      rows.querySelectorAll('[data-ci]').forEach(function (el) {
+        el.addEventListener('input', function () {
+          var idx = parseInt(el.dataset.ci);
+          var field = el.dataset.cf;
+          self.cuotas[idx][field] = el.value;
+        });
+      });
+      rows.querySelectorAll('[data-cd]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var idx = parseInt(btn.dataset.cd);
+          self.cuotas.splice(idx, 1);
+          self._refreshCuotasRows();
+        });
+      });
+    }
+
+    _addCuota() {
+      var d = new Date();
+      d.setMonth(d.getMonth() + 1);
+      this.cuotas.push({ fecha_pago: d.toISOString().split('T')[0], monto: '' });
+      this._refreshCuotasRows();
     }
 
     _refreshItemsTable() {
@@ -188,8 +255,14 @@ var App = window.App || (window.App = {});
 
     async _submit(soloRegistro) {
       if (this.items.length === 0) { alert('Agrega al menos un producto'); return; }
+      if (this.form.forma_pago === 'Credito' && this.cuotas.length === 0) {
+        alert('Agrega al menos una cuota para el pago a crédito');
+        return;
+      }
 
-      var payload = Object.assign({}, this.form, {
+      var payload = Object.assign({}, this.form,
+        this.form.forma_pago === 'Credito' ? { cuotas: this.cuotas.map(function (c) { return { monto: parseFloat(c.monto), fecha_pago: c.fecha_pago }; }) } : {},
+      {
         solo_registro: soloRegistro,
         cliente: {
           tipo_doc: this.cliente.tipo_doc,
