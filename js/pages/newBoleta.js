@@ -204,17 +204,33 @@ var App = window.App || (window.App = {});
       });
       rows.querySelectorAll('[data-cd]').forEach(function (btn) {
         btn.addEventListener('click', function () {
-          var idx = parseInt(btn.dataset.cd);
-          self.cuotas.splice(idx, 1);
+          var remaining = self.cuotas.length - 1;
+          self.cuotas = remaining > 0 ? self._calcCuotas(remaining) : [];
           self._refreshCuotasRows();
         });
       });
     }
 
+    _calcCuotas(count) {
+      var total = this.items.reduce(function (s, it) {
+        return s + parseFloat(it.cantidad || 0) * parseFloat(it.precio_unitario || 0);
+      }, 0);
+      var base = total > 0 ? parseFloat((total / count).toFixed(2)) : 0;
+      var today = new Date();
+      var result = [];
+      for (var i = 0; i < count; i++) {
+        var d = new Date(today);
+        d.setMonth(d.getMonth() + i + 1);
+        var monto = total > 0
+          ? (i === count - 1 ? parseFloat((total - base * (count - 1)).toFixed(2)) : base)
+          : '';
+        result.push({ fecha_pago: d.toISOString().split('T')[0], monto: monto === '' ? '' : String(monto) });
+      }
+      return result;
+    }
+
     _addCuota() {
-      var d = new Date();
-      d.setMonth(d.getMonth() + 1);
-      this.cuotas.push({ fecha_pago: d.toISOString().split('T')[0], monto: '' });
+      this.cuotas = this._calcCuotas(this.cuotas.length + 1);
       this._refreshCuotasRows();
     }
 
