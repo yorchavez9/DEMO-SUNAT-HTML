@@ -12,6 +12,7 @@ App.NewInvoice = class NewInvoice {
     this.cliente = null;
     this.items = [];
     this.sending = false;
+    this.pdfFormat = 'ticket-80';
     this.container = null;
   }
 
@@ -67,7 +68,8 @@ App.NewInvoice = class NewInvoice {
             + '<label class="label">Observaciones (opcional)</label>'
             + '<textarea id="f-obs" class="input" rows="2" placeholder="Comentarios adicionales...">' + App.escapeHtml(f.observacion) + '</textarea>'
           + '</div>'
-          + '<div style="display: flex; justify-content: flex-end; gap: 0.5rem;">'
+          + '<div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">'
+            + App.pdfFormatPickerHTML(this.pdfFormat)
             + '<button type="submit" id="f-submit" class="btn-primary" ' + (this.sending ? 'disabled' : '') + '>'
               + (this.sending
                 ? '<i data-lucide="loader-2" class="w-4 h-4 icon-spin"></i> Emitiendo...'
@@ -114,6 +116,8 @@ App.NewInvoice = class NewInvoice {
       e.preventDefault();
       self._submit();
     });
+
+    App.bindPdfFormatPicker(this.container, function () { return self.pdfFormat; }, function (v) { self.pdfFormat = v; });
   }
 
   _refreshItemsTable() {
@@ -193,6 +197,6 @@ App.NewInvoice = class NewInvoice {
   }
 
   _showResponse(response, error) {
-    new App.ResponseModal({ response: response, error: error, tipo: 'facturas' }).render(document.body);
+    new App.ResponseModal({ response: response, error: error, tipo: 'facturas', pdfFormat: this.pdfFormat }).render(document.body);
   }
 };

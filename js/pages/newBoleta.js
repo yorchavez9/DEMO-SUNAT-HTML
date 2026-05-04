@@ -15,6 +15,7 @@ var App = window.App || (window.App = {});
       this.cliente = Object.assign({}, CLIENTE_ANONIMO);
       this.items = [];
       this.sending = false;
+      this.pdfFormat = 'ticket-80';
       this.container = null;
     }
 
@@ -78,17 +79,20 @@ var App = window.App || (window.App = {});
                 + 'Lo más común es <strong>solo guardarla</strong> y al final del día enviar todas en lote vía Resumen Diario. '
                 + 'Si necesitas enviarla a SUNAT inmediatamente, usa "Enviar a SUNAT".'
               + '</p>'
-              + '<div style="display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">'
-                + '<button type="button" id="b-save" class="btn-secondary" ' + (this.sending ? 'disabled' : '') + '>'
-                  + (this.sending
-                    ? '<i data-lucide="loader-2" class="w-4 h-4 icon-spin"></i> Guardando...'
-                    : '<i data-lucide="save" class="w-4 h-4"></i> Solo guardar (pendiente)')
-                + '</button>'
-                + '<button type="button" id="b-send" class="btn-primary" ' + (this.sending ? 'disabled' : '') + '>'
-                  + (this.sending
-                    ? '<i data-lucide="loader-2" class="w-4 h-4 icon-spin"></i> Enviando...'
-                    : '<i data-lucide="send" class="w-4 h-4"></i> Enviar a SUNAT ahora')
-                + '</button>'
+              + '<div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">'
+                + App.pdfFormatPickerHTML(this.pdfFormat)
+                + '<div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">'
+                  + '<button type="button" id="b-save" class="btn-secondary" ' + (this.sending ? 'disabled' : '') + '>'
+                    + (this.sending
+                      ? '<i data-lucide="loader-2" class="w-4 h-4 icon-spin"></i> Guardando...'
+                      : '<i data-lucide="save" class="w-4 h-4"></i> Solo guardar (pendiente)')
+                  + '</button>'
+                  + '<button type="button" id="b-send" class="btn-primary" ' + (this.sending ? 'disabled' : '') + '>'
+                    + (this.sending
+                      ? '<i data-lucide="loader-2" class="w-4 h-4 icon-spin"></i> Enviando...'
+                      : '<i data-lucide="send" class="w-4 h-4"></i> Enviar a SUNAT ahora')
+                  + '</button>'
+                + '</div>'
               + '</div>'
             + '</div>'
           + '</form>'
@@ -143,6 +147,8 @@ var App = window.App || (window.App = {});
         e.preventDefault();
         self._submit(true);
       });
+
+      App.bindPdfFormatPicker(this.container, function () { return self.pdfFormat; }, function (v) { self.pdfFormat = v; });
     }
 
     _refreshItemsTable() {
@@ -218,7 +224,7 @@ var App = window.App || (window.App = {});
     }
 
     _showResponse(response, error) {
-      new App.ResponseModal({ response: response, error: error, tipo: 'boletas' }).render(document.body);
+      new App.ResponseModal({ response: response, error: error, tipo: 'boletas', pdfFormat: this.pdfFormat }).render(document.body);
     }
   };
 })();

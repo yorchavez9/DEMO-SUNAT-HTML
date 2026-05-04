@@ -37,6 +37,7 @@ var App = window.App || (window.App = {});
       this.destinatario = null;
       this.items = [];
       this.sending = false;
+      this.pdfFormat = 'ticket-80';
       this.container = null;
     }
 
@@ -159,7 +160,8 @@ var App = window.App || (window.App = {});
             + '<div class="card"><label class="label">Observaciones</label>'
               + '<textarea id="g-obs" class="input" rows="2">' + App.escapeHtml(f.observacion) + '</textarea>'
             + '</div>'
-            + '<div style="display: flex; justify-content: flex-end;">'
+            + '<div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">'
+              + App.pdfFormatPickerHTML(this.pdfFormat)
               + '<button type="submit" id="g-submit" class="btn-primary" ' + (this.sending ? 'disabled' : '') + '>'
                 + (this.sending
                   ? '<i data-lucide="loader-2" class="w-4 h-4 icon-spin"></i> Emitiendo...'
@@ -222,6 +224,8 @@ var App = window.App || (window.App = {});
       });
 
       this._bindItems();
+
+      App.bindPdfFormatPicker(this.container, function () { return self.pdfFormat; }, function (v) { self.pdfFormat = v; });
 
       this.container.querySelector('#g-form').addEventListener('submit', function (e) {
         e.preventDefault();
@@ -344,7 +348,7 @@ var App = window.App || (window.App = {});
     }
 
     _showResponse(response, error) {
-      new App.ResponseModal({ response: response, error: error, tipo: 'guias-remision' }).render(document.body);
+      new App.ResponseModal({ response: response, error: error, tipo: 'guias-remision', pdfFormat: this.pdfFormat }).render(document.body);
     }
   };
 })();

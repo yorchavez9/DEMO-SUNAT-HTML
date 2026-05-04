@@ -30,6 +30,7 @@ var App = window.App || (window.App = {});
       this.cliente = null;
       this.items = [];
       this.sending = false;
+      this.pdfFormat = 'ticket-80';
       this.container = null;
     }
 
@@ -99,7 +100,8 @@ var App = window.App || (window.App = {});
               + '<div id="nd-items-table"></div>'
               + '<p style="font-size: 0.75rem; color: rgb(100 116 139); margin-top: 0.75rem;">Los ítems representan el monto <strong>adicional</strong> a cobrar (ND aumenta, NC resta).</p>'
             + '</div>'
-            + '<div style="display: flex; justify-content: flex-end;">'
+            + '<div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">'
+              + App.pdfFormatPickerHTML(this.pdfFormat)
               + '<button type="submit" id="nd-submit" class="btn-primary" ' + (this.sending ? 'disabled' : '') + '>'
                 + (this.sending
                   ? '<i data-lucide="loader-2" class="w-4 h-4 icon-spin"></i> Emitiendo...'
@@ -149,6 +151,8 @@ var App = window.App || (window.App = {});
         onOpenPicker: function () { self._openClientPicker(); },
         onClear: function () { self.cliente = null; self._renderHTML(); self._bind(); },
       });
+
+      App.bindPdfFormatPicker(this.container, function () { return self.pdfFormat; }, function (v) { self.pdfFormat = v; });
 
       this.container.querySelector('#nd-form').addEventListener('submit', function (e) {
         e.preventDefault();
@@ -228,7 +232,7 @@ var App = window.App || (window.App = {});
     }
 
     _showResponse(response, error) {
-      new App.ResponseModal({ response: response, error: error, tipo: 'notas-debito' }).render(document.body);
+      new App.ResponseModal({ response: response, error: error, tipo: 'notas-debito', pdfFormat: this.pdfFormat }).render(document.body);
     }
   };
 })();

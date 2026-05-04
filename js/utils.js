@@ -56,6 +56,39 @@ App.estadoBadgeHTML = function (estado) {
   return '<span class="badge" style="' + style + '">' + App.escapeHtml(estado || '—') + '</span>';
 };
 
+App.pdfFormatPickerHTML = function (current) {
+  var formats = [
+    { value: 'ticket-80', label: 'Ticket 80mm' },
+    { value: 'ticket-58', label: 'Ticket 58mm' },
+    { value: 'a5', label: 'A5' },
+    { value: 'a4', label: 'A4' },
+  ];
+  var buttons = formats.map(function (f) {
+    var active = current === f.value;
+    var bg = active ? 'rgb(37 99 235)' : 'rgb(241 245 249)';
+    var color = active ? 'white' : 'rgb(51 65 85)';
+    return '<button type="button" data-pdf-format="' + f.value + '" style="background:' + bg + ';color:' + color + ';padding:0.375rem 0.75rem;font-size:0.75rem;font-weight:700;border-radius:0.5rem;border:none;cursor:pointer;">'
+      + f.label + '</button>';
+  }).join('');
+  return '<div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">'
+    + '<span style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:rgb(100 116 139);">Formato PDF:</span>'
+    + buttons
+    + '</div>';
+};
+
+App.bindPdfFormatPicker = function (container, getFormat, setFormat) {
+  container.querySelectorAll('[data-pdf-format]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setFormat(btn.dataset.pdfFormat);
+      container.querySelectorAll('[data-pdf-format]').forEach(function (b) {
+        var active = b.dataset.pdfFormat === getFormat();
+        b.style.background = active ? 'rgb(37 99 235)' : 'rgb(241 245 249)';
+        b.style.color = active ? 'white' : 'rgb(51 65 85)';
+      });
+    });
+  });
+};
+
 App.refreshIcons = function () {
   if (window.lucide && window.lucide.createIcons) {
     window.lucide.createIcons({ nameAttr: 'data-lucide' });
