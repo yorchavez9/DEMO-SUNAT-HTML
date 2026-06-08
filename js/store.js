@@ -42,8 +42,8 @@ var App = window.App || (window.App = {});
 
   var DEFAULT_CONFIG = {
     base_url: 'https://apisunatv2.kodevo.es/api/v1',
-    api_key: 'Wm1OcM4VnFPoVOQBVFE7g5pQH9LGLI3Qi6kH52e4KZzhmjGt9aPJrjs8HhDzp3K6',
-    api_secret: '003e38010b68ed1a830bec83b4a4a2f593697d8c6295a807e89d2098e6c13daf',
+    api_key: 'CiYYgu7XWPj080F6vWkZwQwVKDtU5ZN16T2kRt31VhfEwbzJVgCKVFunH8HQWXHK',
+    api_secret: '077069428c4b6aef90915b438052ffc159093fc8aceff1e489c95daed6897624',
   };
 
   App.getConfig = function () {
