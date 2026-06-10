@@ -12,6 +12,7 @@ var App = window.App || (window.App = {});
     { path: '/nueva-nd', icon: 'trending-up', label: 'Nota de Débito' },
     { path: '/nueva-guia', icon: 'truck', label: 'Guía de Remisión' },
     { path: '/resumenes', icon: 'file-stack', label: 'Resumen Diario' },
+    { path: '/anulaciones', icon: 'ban', label: 'Anulaciones' },
   ];
 
   var LINKS_CONSULTAR = [

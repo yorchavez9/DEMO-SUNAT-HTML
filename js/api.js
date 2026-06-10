@@ -116,6 +116,11 @@ var App = window.App || (window.App = {});
     listarResumenes: function (query) { return request('GET', '/resumenes' + (query || '')); },
     estadoResumen: function (id) { return request('GET', '/resumenes/' + id + '/estado'); },
 
+    crearAnulacion: function (data) { return request('POST', '/anulaciones', data); },
+    listarAnulaciones: function (query) { return request('GET', '/anulaciones' + (query || '')); },
+    estadoAnulacion: function (id) { return request('GET', '/anulaciones/' + id + '/estado'); },
+    enviarAnulacion: function (id) { return request('POST', '/anulaciones/' + id + '/enviar'); },
+
     descargarPdf: function (tipo, id, format) { return request('GET', '/' + tipo + '/' + id + '/pdf?format=' + (format || 'a4')); },
     descargarXml: function (tipo, id) { return request('GET', '/' + tipo + '/' + id + '/xml'); },
     descargarCdr: function (tipo, id) { return request('GET', '/' + tipo + '/' + id + '/cdr'); },

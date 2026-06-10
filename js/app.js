@@ -13,6 +13,7 @@
     { path: '/nueva-nd',           handler: function () { return new App.NewDebitNote(); } },
     { path: '/nueva-guia',         handler: function () { return new App.NewDispatchGuide(); } },
     { path: '/resumenes',          handler: function () { return new App.Summaries(); } },
+    { path: '/anulaciones',        handler: function () { return new App.Anulaciones(); } },
     { path: '/documentos/:tipo',   handler: function (params) { return new App.DocumentList(params.tipo); } },
   ]);
 
