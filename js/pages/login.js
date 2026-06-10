@@ -38,12 +38,14 @@ App.Login = class Login {
         + '<div style="width: 100%; max-width: 400px; border-radius: 0.75rem; overflow: hidden; border: 1px solid #d0d5dd; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">'
 
           // Cabecera navy
-          + '<div style="background: #002060; padding: 2rem; text-align: center;">'
-            + '<div style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">'
-              + '<i data-lucide="shield-check" style="width: 32px; height: 32px; color: white;"></i>'
+          + '<div style="background: #002060; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 0.875rem;">'
+            + '<div style="width: 44px; height: 44px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">'
+              + '<i data-lucide="shield-check" style="width: 24px; height: 24px; color: white;"></i>'
             + '</div>'
-            + '<div style="color: white; font-weight: 800; font-size: 1.25rem; letter-spacing: 0.06em;">SUNAT</div>'
-            + '<div style="color: rgba(255,255,255,0.65); font-size: 0.75rem; margin-top: 0.3rem; line-height: 1.5;">Superintendencia Nacional de Aduanas<br>y de Administración Tributaria</div>'
+            + '<div>'
+              + '<div style="color: white; font-weight: 800; font-size: 1.1rem; letter-spacing: 0.06em; line-height: 1.2;">SUNAT</div>'
+              + '<div style="color: rgba(255,255,255,0.6); font-size: 0.68rem; margin-top: 0.2rem; line-height: 1.4;">Superintendencia Nacional de Aduanas<br>y de Administración Tributaria</div>'
+            + '</div>'
           + '</div>'
 
           // Cuerpo
