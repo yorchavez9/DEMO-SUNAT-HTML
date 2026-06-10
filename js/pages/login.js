@@ -6,6 +6,7 @@ App.Login = class Login {
     this.password = '';
     this.error = null;
     this.loading = false;
+    this.showPass = false;
     this.container = null;
     this.router = null;
   }
@@ -19,147 +20,101 @@ App.Login = class Login {
 
   _renderHTML() {
     var errorHTML = this.error
-      ? '<div style="padding: 0.75rem; background: rgb(254 242 242); border-radius: 0.75rem; font-size: 0.875rem; color: rgb(185 28 28); display: flex; align-items: center; gap: 0.5rem;">'
-        + '<i data-lucide="x-circle" class="w-4 h-4" style="flex-shrink: 0;"></i> ' + App.escapeHtml(this.error)
+      ? '<div style="padding: 0.75rem; background: rgb(254 242 242); border-radius: 0.625rem; font-size: 0.875rem; color: rgb(185 28 28); display: flex; align-items: center; gap: 0.5rem;">'
+          + '<i data-lucide="x-circle" style="width: 16px; height: 16px; flex-shrink: 0;"></i> ' + App.escapeHtml(this.error)
         + '</div>'
       : '';
 
     var btnContent = this.loading
-      ? '<span style="display: inline-block; width: 1rem; height: 1rem; border-radius: 9999px; border: 2px solid rgb(255 255 255 / 0.4); border-top-color: white; animation: icon-spin 0.8s linear infinite;"></span> Entrando...'
-      : '<i data-lucide="log-in" class="w-4 h-4"></i> Entrar';
+      ? '<span style="display: inline-block; width: 1rem; height: 1rem; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; animation: icon-spin 0.8s linear infinite;"></span> Verificando...'
+      : '<i data-lucide="log-in" style="width: 16px; height: 16px;"></i> Ingresar al Sistema';
+
+    var eyeIcon = this.showPass ? 'eye-off' : 'eye';
 
     this.container.innerHTML = ''
-      + '<div style="min-height: 100vh; display: flex; background: white;">'
+      + '<div style="min-height: 100vh; background: #001238; display: flex; align-items: center; justify-content: center; padding: 1.5rem; position: relative; overflow: hidden;">'
 
-        // ═══════════ PANEL IZQUIERDO — Marca ═══════════
-        + '<div class="login-brand" style="display: none; position: relative; overflow: hidden; padding: 3rem; flex-direction: column; justify-content: space-between; background: rgb(15 23 42); color: white; width: 45%;">'
+        // Blobs decorativos
+        + '<div style="position: absolute; top: -15%; right: -10%; width: 50vw; height: 50vw; border-radius: 50%; background: rgba(0,48,135,0.35); pointer-events: none;"></div>'
+        + '<div style="position: absolute; bottom: -15%; left: -10%; width: 40vw; height: 40vw; border-radius: 50%; background: rgba(204,0,1,0.1); pointer-events: none;"></div>'
+        + '<div style="position: absolute; top: 40%; left: 30%; width: 25vw; height: 25vw; border-radius: 50%; background: rgba(0,32,96,0.2); pointer-events: none;"></div>'
 
-          // Formas decorativas (colores sólidos con alpha, no gradientes)
-          + '<div style="position: absolute; top: -120px; right: -120px; width: 380px; height: 380px; border-radius: 9999px; background: rgb(37 99 235 / 0.25); pointer-events: none;"></div>'
-          + '<div style="position: absolute; bottom: -80px; left: -100px; width: 320px; height: 320px; border-radius: 9999px; background: rgb(59 130 246 / 0.18); pointer-events: none;"></div>'
-          + '<div style="position: absolute; top: 35%; left: 55%; width: 180px; height: 180px; border-radius: 9999px; background: rgb(96 165 250 / 0.12); pointer-events: none;"></div>'
+        // Card
+        + '<div style="background: white; border-radius: 1.25rem; max-width: 400px; width: 100%; box-shadow: 0 25px 60px rgba(0,0,0,0.5); overflow: hidden; position: relative;">'
 
-          // Header
-          + '<div style="position: relative; z-index: 10; display: flex; align-items: center; gap: 0.75rem;">'
-            + '<div style="width: 2.75rem; height: 2.75rem; border-radius: 1rem; display: flex; align-items: center; justify-content: center; background: rgb(37 99 235);">'
-              + '<i data-lucide="file-digit" class="w-6 h-6"></i>'
+          // Franja bandera peruana
+          + '<div style="height: 6px; background: linear-gradient(to right, #CC0001 33.33%, white 33.33%, white 66.66%, #CC0001 66.66%);"></div>'
+
+          // Cabecera
+          + '<div style="padding: 2rem 2rem 1.25rem; text-align: center;">'
+            // Badge / Sello
+            + '<div style="width: 84px; height: 84px; border-radius: 50%; background: #002060; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; border: 3px solid #C8A000; box-shadow: 0 0 0 6px rgba(200,160,0,0.12), 0 8px 24px rgba(0,32,96,0.3);">'
+              + '<i data-lucide="shield-check" style="width: 42px; height: 42px; color: #C8A000;"></i>'
             + '</div>'
-            + '<div>'
-              + '<div style="font-size: 1.125rem; font-weight: 800; letter-spacing: -0.025em;">SUNAT Demo</div>'
-              + '<div style="font-size: 0.75rem; color: rgb(148 163 184); font-weight: 500;">Sistema de facturación</div>'
-            + '</div>'
+            + '<div style="font-size: 1.375rem; font-weight: 800; color: #002060; letter-spacing: 0.08em;">SUNAT</div>'
+            + '<div style="font-size: 0.8rem; font-weight: 600; color: #334155; margin-top: 0.25rem;">Facturación Electrónica</div>'
+            + '<div style="font-size: 0.68rem; color: #94a3b8; margin-top: 0.2rem; line-height: 1.4;">Superintendencia Nacional de Aduanas<br>y de Administración Tributaria</div>'
           + '</div>'
 
-          // Hero
-          + '<div style="position: relative; z-index: 10;">'
-            + '<div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.025em; margin-bottom: 1.5rem; background: rgb(37 99 235 / 0.25); color: rgb(147 197 253);">'
-              + '<i data-lucide="sparkles" class="w-[14px] h-[14px]"></i> Demo interactiva'
-            + '</div>'
-            + '<h2 style="font-size: 2.5rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.025em; margin-bottom: 1rem;">'
-              + 'Facturación electrónica <span style="color: rgb(96 165 250);">sin complicaciones.</span>'
-            + '</h2>'
-            + '<p style="color: rgb(203 213 225); font-size: 1rem; line-height: 1.6; max-width: 28rem;">'
-              + 'Emite facturas, boletas, notas de crédito y guías de remisión conectándote directamente a SUNAT. Todo desde una única API.'
-            + '</p>'
+          // Separador
+          + '<div style="height: 1px; background: #e2e8f0; margin: 0 1.5rem;"></div>'
 
-            // Features
-            + '<div style="margin-top: 2.5rem; display: flex; flex-direction: column; gap: 1rem;">'
-              + this._featureHTML('zap', 'Emisión en segundos', 'Envío directo a SUNAT o en modo lote')
-              + this._featureHTML('shield-check', 'Certificado digital', 'Firma XML + validación SUNAT incluida')
-            + '</div>'
-          + '</div>'
-
-          // Footer
-          + '<div style="position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; color: rgb(148 163 184);">'
-            + '<div>Hecho con ♥ en Perú</div>'
-            + '<div style="font-family: JetBrains Mono, monospace;">v1.0.0</div>'
-          + '</div>'
-        + '</div>'
-
-        // ═══════════ PANEL DERECHO — Formulario ═══════════
-        + '<div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5rem;">'
-          + '<div style="width: 100%; max-width: 24rem;">'
-
-            // Logo móvil
-            + '<div class="login-mobile-logo" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem;">'
-              + '<div style="width: 3.5rem; height: 3.5rem; border-radius: 1rem; display: flex; align-items: center; justify-content: center; color: white; margin-bottom: 0.75rem; background: rgb(37 99 235);">'
-                + '<i data-lucide="file-digit" class="w-7 h-7"></i>'
-              + '</div>'
-              + '<div style="font-size: 1.125rem; font-weight: 800; letter-spacing: -0.025em; color: rgb(15 23 42);">SUNAT Demo</div>'
-            + '</div>'
-
-            + '<div style="margin-bottom: 2rem;">'
-              + '<h1 style="font-size: 1.875rem; font-weight: 800; letter-spacing: -0.025em; color: rgb(15 23 42); margin-bottom: 0.375rem;">Bienvenido 👋</h1>'
-              + '<p style="color: rgb(100 116 139); font-size: 0.875rem;">Inicia sesión para acceder a la demo.</p>'
-            + '</div>'
+          // Formulario
+          + '<div style="padding: 1.5rem 2rem 2rem;">'
+            + '<h1 style="font-size: 1rem; font-weight: 700; color: #002060; text-align: center; margin-bottom: 1.25rem;">Iniciar Sesión</h1>'
 
             + '<form id="login-form" style="display: flex; flex-direction: column; gap: 1rem;">'
               + '<div>'
                 + '<label class="label">Usuario</label>'
-                + '<input id="login-user" class="input" autofocus value="' + App.escapeHtml(this.usuario) + '" placeholder="demo" required />'
+                + '<input id="login-user" class="input" value="' + App.escapeHtml(this.usuario) + '" placeholder="Ingrese su usuario" required autofocus />'
               + '</div>'
               + '<div>'
                 + '<label class="label">Contraseña</label>'
-                + '<input id="login-pass" type="password" class="input" value="' + App.escapeHtml(this.password) + '" placeholder="demo123" required />'
+                + '<div style="position: relative;">'
+                  + '<input id="login-pass" type="' + (this.showPass ? 'text' : 'password') + '" class="input" style="padding-right: 2.75rem;" value="' + App.escapeHtml(this.password) + '" placeholder="Ingrese su contraseña" required />'
+                  + '<button type="button" id="login-eye" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #94a3b8; padding: 0; display: flex; align-items: center;">'
+                    + '<i data-lucide="' + eyeIcon + '" style="width: 16px; height: 16px;"></i>'
+                  + '</button>'
+                + '</div>'
               + '</div>'
               + errorHTML
-              + '<button type="submit" class="btn-primary" style="width: 100%; margin-top: 0.5rem; padding: 0.75rem 1rem;" ' + (this.loading ? 'disabled' : '') + '>'
+              + '<button type="submit" id="login-btn" style="width: 100%; padding: 0.75rem 1rem; margin-top: 0.25rem; background: ' + (this.loading ? '#94a3b8' : '#002060') + '; color: white; border: none; border-radius: 0.625rem; font-weight: 700; font-size: 0.9375rem; cursor: ' + (this.loading ? 'not-allowed' : 'pointer') + '; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" ' + (this.loading ? 'disabled' : '') + '>'
                 + btnContent
               + '</button>'
             + '</form>'
 
             // Credenciales demo
-            + '<div style="margin-top: 1.5rem; padding: 1rem; border-radius: 0.75rem; background: rgb(241 245 249);">'
-              + '<div style="display: flex; align-items: center; gap: 0.375rem; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: rgb(71 85 105); margin-bottom: 0.5rem;">'
-                + '<i data-lucide="info" class="w-3 h-3"></i> Credenciales demo'
+            + '<div style="margin-top: 1.25rem; padding: 0.875rem; border-radius: 0.625rem; background: #f0f4ff; border: 1px solid #dbeafe;">'
+              + '<div style="display: flex; align-items: center; gap: 0.375rem; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #002060; margin-bottom: 0.5rem;">'
+                + '<i data-lucide="info" style="width: 12px; height: 12px;"></i> Credenciales de acceso demo'
               + '</div>'
-              + '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.75rem;">'
+              + '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">'
                 + '<div>'
-                  + '<div style="font-size: 10px; color: rgb(100 116 139); font-weight: 600; text-transform: uppercase;">Usuario</div>'
-                  + '<code style="display: block; margin-top: 0.125rem; padding: 0.25rem 0.5rem; background: white; border-radius: 0.375rem; font-family: JetBrains Mono, monospace; font-weight: 700; color: rgb(15 23 42);">demo</code>'
+                  + '<div style="font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase;">Usuario</div>'
+                  + '<code style="display: block; margin-top: 0.125rem; padding: 0.25rem 0.5rem; background: white; border-radius: 0.375rem; font-family: monospace; font-weight: 700; color: #002060; font-size: 0.8125rem;">demo</code>'
                 + '</div>'
                 + '<div>'
-                  + '<div style="font-size: 10px; color: rgb(100 116 139); font-weight: 600; text-transform: uppercase;">Contraseña</div>'
-                  + '<code style="display: block; margin-top: 0.125rem; padding: 0.25rem 0.5rem; background: white; border-radius: 0.375rem; font-family: JetBrains Mono, monospace; font-weight: 700; color: rgb(15 23 42);">demo123</code>'
+                  + '<div style="font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase;">Contraseña</div>'
+                  + '<code style="display: block; margin-top: 0.125rem; padding: 0.25rem 0.5rem; background: white; border-radius: 0.375rem; font-family: monospace; font-weight: 700; color: #002060; font-size: 0.8125rem;">demo123</code>'
                 + '</div>'
               + '</div>'
             + '</div>'
 
-            + '<div style="margin-top: 1.5rem; text-align: center; font-size: 0.75rem; color: rgb(148 163 184);">'
+            + '<div style="margin-top: 1.25rem; text-align: center; font-size: 0.6875rem; color: #94a3b8;">'
               + '© ' + new Date().getFullYear() + ' SUNAT Demo · Solo para pruebas'
             + '</div>'
           + '</div>'
         + '</div>'
-      + '</div>'
-
-      // Estilos responsive (panel izq solo en desktop, logo móvil solo en móvil)
-      + '<style>'
-        + '@media (min-width: 1024px) {'
-          + '.login-brand { display: flex !important; }'
-          + '.login-mobile-logo { display: none !important; }'
-        + '}'
-      + '</style>';
+      + '</div>';
 
     App.refreshIcons();
-  }
-
-  _featureHTML(iconName, title, subtitle) {
-    return ''
-      + '<div style="display: flex; align-items: flex-start; gap: 0.75rem;">'
-        + '<div style="width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: rgb(37 99 235 / 0.2);">'
-          + '<i data-lucide="' + iconName + '" class="w-5 h-5" style="color: rgb(147 197 253);"></i>'
-        + '</div>'
-        + '<div>'
-          + '<div style="font-weight: 700; color: white; font-size: 0.875rem;">' + App.escapeHtml(title) + '</div>'
-          + '<div style="font-size: 0.75rem; color: rgb(148 163 184); margin-top: 0.125rem;">' + App.escapeHtml(subtitle) + '</div>'
-        + '</div>'
-      + '</div>';
   }
 
   _bind() {
     var self = this;
     var user = this.container.querySelector('#login-user');
     var pass = this.container.querySelector('#login-pass');
+    var eye  = this.container.querySelector('#login-eye');
     var form = this.container.querySelector('#login-form');
 
     user.addEventListener('input', function (e) {
@@ -170,7 +125,11 @@ App.Login = class Login {
       self.password = e.target.value;
       if (self.error) { self.error = null; self._renderHTML(); self._bind(); }
     });
-
+    eye.addEventListener('click', function () {
+      self.showPass = !self.showPass;
+      self._renderHTML();
+      self._bind();
+    });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       self._submit();
