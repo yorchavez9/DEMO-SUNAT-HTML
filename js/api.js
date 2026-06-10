@@ -1,6 +1,38 @@
 var App = window.App || (window.App = {});
 
 (function () {
+  // ─── API json.pe — consulta RUC / DNI ─────────────────
+  var JSONPE_TOKEN = '461a4e35bb683c7b21e8da62a012108f81422441ed843b5b6a510f9b9fa8';
+
+  async function buscarDocumentoExterno(tipo, numero) {
+    var esRuc = tipo === '6';
+    var url = 'https://api.json.pe/api/' + (esRuc ? 'ruc' : 'dni');
+    var body = esRuc ? { ruc: numero } : { dni: numero };
+
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + JSONPE_TOKEN,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    var json = await res.json();
+
+    if (!res.ok || !json.success) {
+      throw new Error(json.message || 'No se encontró el documento.');
+    }
+
+    var d = json.data;
+    return {
+      success: true,
+      data: esRuc
+        ? { tipo_doc: '6', num_doc: d.ruc, razon_social: d.nombre_o_razon_social, direccion: d.direccion_completa || d.direccion || '', fuente: 'SUNAT' }
+        : { tipo_doc: '1', num_doc: d.numero, razon_social: d.nombre_completo, direccion: d.direccion_completa || d.direccion || '', fuente: 'RENIEC' },
+    };
+  }
+
   async function request(method, path, body) {
     var cfg = App.getConfig();
 
@@ -60,7 +92,7 @@ var App = window.App || (window.App = {});
     listSeries: function (params) { return request('GET', '/series' + (params || '')); },
     listClientes: function (buscar) { return request('GET', '/clientes?buscar=' + encodeURIComponent(buscar || '')); },
 
-    buscarDocumento: function (tipo, numero) { return request('GET', '/buscar-documento?tipo=' + tipo + '&numero=' + numero); },
+    buscarDocumento: function (tipo, numero) { return buscarDocumentoExterno(tipo, numero); },
 
     crearFactura: function (data) { return request('POST', '/facturas', data); },
     listarFacturas: function (query) { return request('GET', '/facturas' + (query || '')); },
