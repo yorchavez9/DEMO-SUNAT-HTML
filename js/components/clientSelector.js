@@ -1,5 +1,13 @@
 var App = window.App || (window.App = {});
 
+var CS_TIPOS_DOC = [
+  { cod: '6', label: 'RUC' },
+  { cod: '1', label: 'DNI' },
+  { cod: '4', label: 'Carnet de extranjería' },
+  { cod: '7', label: 'Pasaporte' },
+  { cod: '0', label: 'Otros' },
+];
+
 App.clientSelectorHTML = function (cliente, placeholder) {
   placeholder = placeholder || 'Ingrese RUC o DNI...';
 
@@ -38,6 +46,9 @@ App.clientSelectorHTML = function (cliente, placeholder) {
         + '<i data-lucide="alert-circle" class="w-4 h-4" style="flex-shrink: 0;"></i>'
         + '<span id="cs-error-msg"></span>'
       + '</div>'
+      + '<button type="button" id="cs-manual-btn" style="display: inline-flex; align-items: center; gap: 0.375rem; font-size: 0.875rem; color: rgb(100 116 139); background: transparent; border: none; cursor: pointer; padding: 0; margin-top: 0.125rem;">'
+        + '<i data-lucide="user-plus" style="width: 14px; height: 14px;"></i> Ingresar datos manualmente'
+      + '</button>'
     + '</div>';
 };
 
@@ -52,10 +63,11 @@ App.bindClientSelector = function (container, opts) {
     return;
   }
 
-  var input  = container.querySelector('#cs-input');
-  var btn    = container.querySelector('#cs-btn');
-  var errBox = container.querySelector('#cs-error');
-  var errMsg = container.querySelector('#cs-error-msg');
+  var input    = container.querySelector('#cs-input');
+  var btn      = container.querySelector('#cs-btn');
+  var errBox   = container.querySelector('#cs-error');
+  var errMsg   = container.querySelector('#cs-error-msg');
+  var manualBtn = container.querySelector('#cs-manual-btn');
 
   if (!input || !btn) return;
 
@@ -96,4 +108,92 @@ App.bindClientSelector = function (container, opts) {
     if (e.key === 'Enter') { e.preventDefault(); buscar(); }
   });
   btn.addEventListener('click', buscar);
+
+  if (manualBtn) {
+    manualBtn.addEventListener('click', function () {
+      App.openClientManualModal(function (data) {
+        if (opts.onSelect) opts.onSelect(data);
+      });
+    });
+  }
+};
+
+App.openClientManualModal = function (onConfirm) {
+  var tiposOpts = CS_TIPOS_DOC.map(function (t) {
+    return '<option value="' + t.cod + '">' + t.label + '</option>';
+  }).join('');
+
+  var html = ''
+    + '<div id="cm-overlay" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 1rem;">'
+      + '<div id="cm-card" style="background: white; border-radius: 0.75rem; width: 100%; max-width: 28rem; box-shadow: 0 20px 60px rgba(0,0,0,0.2);">'
+        + '<div style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; border-bottom: 1px solid rgb(241 245 249);">'
+          + '<h2 style="font-size: 0.9375rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">'
+            + '<i data-lucide="user-plus" style="width: 20px; height: 20px; color: rgb(59 130 246);"></i> Ingresar cliente manualmente'
+          + '</h2>'
+          + '<button id="cm-close" type="button" style="color: rgb(148 163 184); background: transparent; border: none; cursor: pointer; padding: 0.25rem; border-radius: 0.25rem;">'
+            + '<i data-lucide="x" class="w-5 h-5"></i>'
+          + '</button>'
+        + '</div>'
+        + '<form id="cm-form" style="padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">'
+          + '<div style="display: flex; gap: 0.75rem;">'
+            + '<div style="flex: 0 0 auto; width: 11rem;">'
+              + '<label class="label">Tipo de doc.</label>'
+              + '<select id="cm-tipo" class="input">' + tiposOpts + '</select>'
+            + '</div>'
+            + '<div style="flex: 1;">'
+              + '<label class="label">N° de documento</label>'
+              + '<input id="cm-num" class="input font-mono" placeholder="20xxxxxxxxx" maxlength="11" required />'
+            + '</div>'
+          + '</div>'
+          + '<div>'
+            + '<label class="label">Razón social / Nombre</label>'
+            + '<input id="cm-razon" class="input" placeholder="EMPRESA S.A.C." required />'
+          + '</div>'
+          + '<div>'
+            + '<label class="label">Dirección <span style="color: rgb(148 163 184); font-weight: 400;">(opcional)</span></label>'
+            + '<input id="cm-dir" class="input" placeholder="Av. Example 123, Lima" />'
+          + '</div>'
+          + '<div style="display: flex; gap: 0.5rem; padding-top: 0.5rem;">'
+            + '<button type="submit" class="btn-primary" style="display: flex; align-items: center; gap: 0.375rem;">'
+              + '<i data-lucide="check-circle-2" class="w-4 h-4"></i> Confirmar'
+            + '</button>'
+            + '<button type="button" id="cm-cancel" class="btn-secondary">Cancelar</button>'
+          + '</div>'
+        + '</form>'
+      + '</div>'
+    + '</div>';
+
+  document.body.insertAdjacentHTML('beforeend', html);
+  var overlay = document.getElementById('cm-overlay');
+  App.refreshIcons();
+
+  var numInput = overlay.querySelector('#cm-num');
+  numInput.addEventListener('input', function () {
+    numInput.value = numInput.value.replace(/\D/g, '');
+  });
+
+  var razonInput = overlay.querySelector('#cm-razon');
+  razonInput.addEventListener('input', function () {
+    razonInput.value = razonInput.value.toUpperCase();
+  });
+
+  function close() { overlay.remove(); }
+
+  overlay.querySelector('#cm-close').addEventListener('click', close);
+  overlay.querySelector('#cm-cancel').addEventListener('click', close);
+  overlay.addEventListener('click', function (e) {
+    if (!overlay.querySelector('#cm-card').contains(e.target)) close();
+  });
+
+  overlay.querySelector('#cm-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var data = {
+      tipo_doc: overlay.querySelector('#cm-tipo').value,
+      num_doc: overlay.querySelector('#cm-num').value.trim(),
+      razon_social: overlay.querySelector('#cm-razon').value.trim(),
+      direccion: overlay.querySelector('#cm-dir').value.trim(),
+    };
+    onConfirm(data);
+    close();
+  });
 };

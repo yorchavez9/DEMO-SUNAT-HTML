@@ -2,9 +2,10 @@ var App = window.App || (window.App = {});
 
 (function () {
   // ─── API json.pe — consulta RUC / DNI ─────────────────
-  var JSONPE_TOKEN = '461a4e35bb683c7b21e8da62a012108f81422441ed843b5b6a510f9b9fa8';
-
   async function buscarDocumentoExterno(tipo, numero) {
+    var token = App.getConfig().jsonpe_token;
+    if (!token) throw new Error('Falta configurar el Token de api.json.pe en Configuración.');
+
     var esRuc = tipo === '6';
     var url = 'https://api.json.pe/api/' + (esRuc ? 'ruc' : 'dni');
     var body = esRuc ? { ruc: numero } : { dni: numero };
@@ -12,7 +13,7 @@ var App = window.App || (window.App = {});
     var res = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + JSONPE_TOKEN,
+        'Authorization': 'Bearer ' + token,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),

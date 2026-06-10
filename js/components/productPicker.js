@@ -35,7 +35,7 @@ App.ProductPicker = class ProductPicker {
             + '<td class="font-mono text-xs">' + App.escapeHtml(p.codigo) + '</td>'
             + '<td><div>' + App.escapeHtml(p.descripcion) + '</div>'
             + '<div class="text-xs" style="color: rgb(148 163 184);">' + App.escapeHtml(p.categoria) + '</div></td>'
-            + '<td class="text-xs">' + App.escapeHtml(p.unidad) + '</td>'
+            + '<td class="text-xs">' + (function(cod) { var u = (App.SUNAT_UNITS||[]).find(function(x){return x.cod===cod;}); return u ? u.sym : App.escapeHtml(cod); })(p.unidad) + '</td>'
             + '<td class="text-right font-semibold">S/ ' + p.precio_unitario.toFixed(2) + '</td>'
             + '<td><button class="btn-primary text-xs" style="padding: 0.25rem 0.75rem;" data-code="' + App.escapeHtml(p.codigo) + '">Agregar</button></td>'
             + '</tr>';

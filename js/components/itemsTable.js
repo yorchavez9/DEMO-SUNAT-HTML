@@ -1,5 +1,85 @@
 var App = window.App || (window.App = {});
 
+App.SUNAT_UNITS = [
+  { cod: 'NIU', sym: 'UND',   desc: 'Unidad' },
+  { cod: 'ZZ',  sym: 'SERV',  desc: 'Servicio' },
+  { cod: 'HUR', sym: 'HR',    desc: 'Hora' },
+  { cod: 'BX',  sym: 'CAJ',   desc: 'Caja' },
+  { cod: 'GLL', sym: 'GL',    desc: 'Galón' },
+  { cod: 'GRM', sym: 'GR',    desc: 'Gramos' },
+  { cod: 'KGM', sym: 'KG',    desc: 'Kilos' },
+  { cod: 'LTR', sym: 'LT',    desc: 'Litro' },
+  { cod: 'MTR', sym: 'M',     desc: 'Metro' },
+  { cod: 'FOT', sym: 'PIE',   desc: 'Pies' },
+  { cod: 'INH', sym: 'INCH',  desc: 'Pulgadas' },
+  { cod: 'YRD', sym: 'YD',    desc: 'Yarda' },
+  { cod: 'TNE', sym: 'TNL',   desc: 'Toneladas' },
+  { cod: 'DZN', sym: 'DOC',   desc: 'Docena' },
+  { cod: 'QD',  sym: '1/4 DOC', desc: 'Cuarto de docena' },
+  { cod: 'PK',  sym: 'PQT',   desc: 'Paquete' },
+  { cod: 'MTQ', sym: 'M3',    desc: 'Metro cúbico' },
+  { cod: 'HD',  sym: '1/2 DOC', desc: 'Media docena' },
+  { cod: 'PR',  sym: 'PAR',   desc: 'Par' },
+  { cod: 'JG',  sym: 'JARR',  desc: 'Jarra' },
+  { cod: 'JR',  sym: 'FCO',   desc: 'Frasco' },
+  { cod: 'KT',  sym: 'KIT',   desc: 'Kit' },
+  { cod: 'CH',  sym: 'ENV',   desc: 'Envase' },
+  { cod: 'AV',  sym: 'CAPS',  desc: 'Cápsula' },
+  { cod: 'CT',  sym: 'CTON',  desc: 'Cartón' },
+  { cod: 'CY',  sym: 'CIL',   desc: 'Cilindro' },
+  { cod: 'BE',  sym: 'FARD',  desc: 'Fardo' },
+  { cod: 'BG',  sym: 'BOLS',  desc: 'Bolsa' },
+  { cod: 'BJ',  sym: 'BALD',  desc: 'Balde' },
+  { cod: 'SET', sym: 'JGO',   desc: 'Juego' },
+  { cod: 'BLL', sym: 'BRL',   desc: 'Barril' },
+  { cod: 'RM',  sym: 'RESM',  desc: 'Resma' },
+  { cod: 'BO',  sym: 'BOT',   desc: 'Botellas' },
+  { cod: 'SA',  sym: 'SCO',   desc: 'Saco' },
+  { cod: 'BT',  sym: 'TORN',  desc: 'Tornillo' },
+  { cod: 'C62', sym: 'PZ',    desc: 'Piezas' },
+  { cod: 'U2',  sym: 'BLIST', desc: 'Tableta o blister' },
+  { cod: 'CA',  sym: 'LT',    desc: 'Latas' },
+  { cod: 'CEN', sym: 'CTO',   desc: 'Centenar o ciento' },
+  { cod: 'CMT', sym: 'CM',    desc: 'Centímetro' },
+  { cod: 'CMK', sym: 'CM2',   desc: 'Centímetro cuadrado' },
+  { cod: 'CMQ', sym: 'CM3',   desc: 'Centímetro cúbico' },
+  { cod: 'DZP', sym: 'DOC2',  desc: 'Docena de paquetes' },
+  { cod: 'FTK', sym: 'PIE2',  desc: 'Pies cuadrados' },
+  { cod: 'FTQ', sym: 'PIE3',  desc: 'Pies cúbicos' },
+  { cod: 'GLI', sym: 'GL',    desc: 'Galón inglés' },
+  { cod: 'HT',  sym: '1/2 H', desc: 'Media hora' },
+  { cod: 'KTM', sym: 'KM',    desc: 'Kilómetro' },
+  { cod: 'KWH', sym: 'KWxH',  desc: 'Kilovatio hora' },
+  { cod: 'MWH', sym: 'MWxH',  desc: 'Megavatio hora' },
+  { cod: 'LBR', sym: 'LB',    desc: 'Libras' },
+  { cod: 'LEF', sym: 'HOJA',  desc: 'Hoja' },
+  { cod: 'MGM', sym: 'MG',    desc: 'Miligramos' },
+  { cod: 'MIL', sym: 'MIL',   desc: 'Millar' },
+  { cod: 'MLT', sym: 'ML',    desc: 'Mililitro' },
+  { cod: 'MMT', sym: 'MM',    desc: 'Milímetro' },
+  { cod: 'MMK', sym: 'MM2',   desc: 'Milímetro cuadrado' },
+  { cod: 'MMQ', sym: 'MM3',   desc: 'Milímetro cúbico' },
+  { cod: 'MTK', sym: 'M2',    desc: 'Metro cuadrado' },
+  { cod: 'ONZ', sym: 'ONZ',   desc: 'Onzas' },
+  { cod: 'PF',  sym: 'PAL',   desc: 'Paletas' },
+  { cod: 'PG',  sym: 'PLAC',  desc: 'Placas' },
+  { cod: 'RD',  sym: 'VAR',   desc: 'Varilla' },
+  { cod: 'RL',  sym: 'CRR',   desc: 'Carrete' },
+  { cod: 'SEC', sym: 'SEG',   desc: 'Segundo' },
+  { cod: 'ST',  sym: 'PLGO',  desc: 'Pliego' },
+  { cod: 'TU',  sym: 'TB',    desc: 'Tubos' },
+  { cod: 'UM',  sym: 'MILL',  desc: 'Millón' },
+];
+
+App.sunatUnitsSelectHTML = function (value, idx) {
+  var selected = value || 'NIU';
+  return '<select class="input-inline text-xs" data-field="unidad" data-idx="' + idx + '">'
+    + App.SUNAT_UNITS.map(function (u) {
+      return '<option value="' + u.cod + '"' + (u.cod === selected ? ' selected' : '') + '>' + u.cod + ' - ' + u.sym + '</option>';
+    }).join('')
+    + '</select>';
+};
+
 App.itemsTableHTML = function (items, moneda) {
   moneda = moneda || 'PEN';
   var simbolo = moneda === 'USD' ? '$' : moneda === 'EUR' ? '€' : 'S/';
@@ -33,7 +113,7 @@ App.itemsTableHTML = function (items, moneda) {
         + '<input class="input-inline" data-field="descripcion" data-idx="' + idx + '" value="' + App.escapeHtml(it.descripcion || '') + '" />'
         + (it.codigo ? '<div class="text-xs font-semibold" style="padding: 0 0.5rem; margin-top: 0.125rem; color: rgb(148 163 184);">' + App.escapeHtml(it.codigo) + '</div>' : '')
       + '</td>'
-      + '<td><input class="input-inline font-mono text-xs" data-field="unidad" data-idx="' + idx + '" value="' + App.escapeHtml(it.unidad || '') + '" /></td>'
+      + '<td>' + App.sunatUnitsSelectHTML(it.unidad, idx) + '</td>'
       + '<td><input type="number" min="0" step="any" class="input-inline text-right" data-field="cantidad" data-idx="' + idx + '" value="' + App.escapeHtml(it.cantidad == null ? '' : it.cantidad) + '" /></td>'
       + '<td><input type="number" min="0" step="any" class="input-inline text-right" data-field="precio_unitario" data-idx="' + idx + '" value="' + App.escapeHtml(it.precio_unitario == null ? '' : it.precio_unitario) + '" /></td>'
       + '<td><select class="input-inline text-xs" data-field="tip_afe_igv" data-idx="' + idx + '">'
@@ -59,7 +139,7 @@ App.itemsTableHTML = function (items, moneda) {
     + '<div class="table-wrap">'
       + '<table class="table-std" style="min-width: 700px;">'
         + '<thead><tr>'
-          + '<th>Descripción</th><th style="width: 5rem;">Und</th>'
+          + '<th>Descripción</th><th style="width: 8rem;">Und</th>'
           + '<th style="width: 6rem; text-align: right;">Cantidad</th>'
           + '<th style="width: 7rem; text-align: right;">Precio Unit.</th>'
           + '<th style="width: 7rem;">IGV</th>'
@@ -128,7 +208,14 @@ App.bindItemsTable = function (container, getItems, setItems, moneda) {
         if (['cantidad', 'precio_unitario'].includes(field)) updateLiveTotals();
       });
       el.addEventListener('change', function () {
-        if (el.dataset.field === 'tip_afe_igv') updateLiveTotals();
+        var f = el.dataset.field;
+        if (f === 'tip_afe_igv' || f === 'unidad') {
+          var idx = parseInt(el.dataset.idx, 10);
+          var items = getItems();
+          items[idx] = Object.assign({}, items[idx], { [f]: el.value });
+          setItems(items);
+          if (f === 'tip_afe_igv') updateLiveTotals();
+        }
       });
     });
 

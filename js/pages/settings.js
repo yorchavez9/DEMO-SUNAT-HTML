@@ -45,10 +45,17 @@ App.Settings = class Settings {
           + '<div>'
             + '<label class="label">X-Api-Secret</label>'
             + '<input id="s-api-secret" type="password" class="input font-mono" value="' + App.escapeHtml(this.config.api_secret) + '" placeholder="Tu api_secret" />'
-            + '<p class="text-xs flex items-center gap-1" style="color: rgb(100 116 139); margin-top: 0.25rem;">'
-              + '<i data-lucide="alert-triangle" class="w-3 h-3"></i> Se guarda en localStorage de tu navegador.'
+          + '</div>'
+          + '<div style="padding-top: 0.5rem; border-top: 1px solid rgb(241 245 249);">'
+            + '<label class="label">Token api.json.pe <span style="color: rgb(148 163 184); font-weight: 400;">(consulta RUC / DNI)</span></label>'
+            + '<input id="s-jsonpe-token" type="password" class="input font-mono" value="' + App.escapeHtml(this.config.jsonpe_token || '') + '" placeholder="Bearer token de api.json.pe" />'
+            + '<p class="text-xs" style="color: rgb(100 116 139); margin-top: 0.25rem;">'
+              + 'Obtén tu token en <strong>api.json.pe</strong>. Se usa para buscar datos de RUC (SUNAT) y DNI (RENIEC).'
             + '</p>'
           + '</div>'
+          + '<p class="text-xs flex items-center gap-1" style="color: rgb(100 116 139);">'
+            + '<i data-lucide="alert-triangle" class="w-3 h-3"></i> Las credenciales se guardan en localStorage de tu navegador.'
+          + '</p>'
           + '<div style="display: flex; gap: 0.5rem; align-items: center; padding-top: 1rem;">'
             + '<button id="s-save" class="btn-primary"><i data-lucide="save" class="w-4 h-4"></i> Guardar</button>'
             + '<button id="s-test" class="btn-secondary" ' + ((this.testing || !this.config.api_key || !this.config.api_secret) ? 'disabled' : '') + '>'
@@ -114,6 +121,9 @@ App.Settings = class Settings {
     this.container.querySelector('#s-api-secret').addEventListener('input', function (e) {
       self.config.api_secret = e.target.value;
       self._refreshButtons();
+    });
+    this.container.querySelector('#s-jsonpe-token').addEventListener('input', function (e) {
+      self.config.jsonpe_token = e.target.value;
     });
 
     this.container.querySelector('#s-save').addEventListener('click', function () { self._save(); });
