@@ -148,12 +148,8 @@ var App = window.App || (window.App = {});
       this.container.querySelector('#b-add-prod').addEventListener('click', function () { self._openProductPicker(); });
 
       App.bindClientSelector(this.container.querySelector('#b-client-selector'), {
-        onOpenPicker: function () { self._openClientPicker(); },
-        onClear: function () {
-          self.cliente = Object.assign({}, CLIENTE_ANONIMO);
-          self._renderHTML();
-          self._bind();
-        },
+        onSelect: function (c) { self.cliente = c; self._renderHTML(); self._bind(); },
+        onClear: function () { self.cliente = null; self._renderHTML(); self._bind(); },
       });
 
       this.container.querySelector('#b-save').addEventListener('click', function () { self._submit(true); });

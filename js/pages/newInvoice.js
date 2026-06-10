@@ -123,7 +123,7 @@ App.NewInvoice = class NewInvoice {
     this.container.querySelector('#f-add-prod').addEventListener('click', function () { self._openProductPicker(); });
 
     App.bindClientSelector(this.container.querySelector('#f-client-selector'), {
-      onOpenPicker: function () { self._openClientPicker(); },
+      onSelect: function (c) { self.cliente = c; self._renderHTML(); self._bind(); },
       onClear: function () { self.cliente = null; self._renderHTML(); self._bind(); },
     });
 

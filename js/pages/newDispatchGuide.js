@@ -219,7 +219,7 @@ var App = window.App || (window.App = {});
       this.container.querySelector('#g-add-prod').addEventListener('click', function () { self._openProductPicker(); });
 
       App.bindClientSelector(this.container.querySelector('#g-dest-selector'), {
-        onOpenPicker: function () { self._openClientPicker(); },
+        onSelect: function (c) { self.destinatario = c; self._renderHTML(); self._bind(); },
         onClear: function () { self.destinatario = null; self._renderHTML(); self._bind(); },
       });
 
