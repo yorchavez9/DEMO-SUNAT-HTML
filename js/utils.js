@@ -49,11 +49,21 @@ App.estadoBadgeHTML = function (estado) {
     procesando: 'background-color: rgb(219 234 254); color: rgb(30 64 175);',
     aceptado: 'background-color: rgb(220 252 231); color: rgb(22 101 52);',
     rechazado: 'background-color: rgb(254 226 226); color: rgb(153 27 27);',
-    anulado: 'background-color: rgb(243 244 246); color: rgb(31 41 55);',
+    anulado: 'background-color: rgb(243 244 246); color: rgb(75 85 99);',
     anulacion_en_proceso: 'background-color: rgb(255 237 213); color: rgb(154 52 18);',
   };
+  var labels = {
+    pendiente: 'Pendiente',
+    enviado: 'Enviado',
+    procesando: 'Procesando',
+    aceptado: 'Aceptado',
+    rechazado: 'Rechazado',
+    anulado: 'Anulado',
+    anulacion_en_proceso: 'Anulación en proceso',
+  };
   var style = colors[estado] || 'background-color: rgb(241 245 249); color: rgb(51 65 85);';
-  return '<span class="badge" style="' + style + '">' + App.escapeHtml(estado || '—') + '</span>';
+  var label = labels[estado] || estado || '—';
+  return '<span class="badge" style="' + style + '">' + App.escapeHtml(label) + '</span>';
 };
 
 App.pdfFormatPickerHTML = function (current) {
@@ -93,4 +103,18 @@ App.refreshIcons = function () {
   if (window.lucide && window.lucide.createIcons) {
     window.lucide.createIcons({ nameAttr: 'data-lucide' });
   }
+};
+
+App.normalizeAnulacion = function (a) {
+  if (!a) return a;
+  var estadoSunat =
+    a.sunat_status != null ? a.sunat_status :
+    a.estado_sunat != null ? a.estado_sunat :
+    (a.sunat && a.sunat.estado != null ? a.sunat.estado :
+    (a.estado != null ? a.estado : null));
+  return Object.assign({}, a, {
+    estado_sunat: estadoSunat,
+    sunat_description: a.sunat_description || (a.sunat && a.sunat.descripcion) || null,
+    ticket: a.ticket != null ? a.ticket : (a.sunat && a.sunat.ticket != null ? a.sunat.ticket : null),
+  });
 };

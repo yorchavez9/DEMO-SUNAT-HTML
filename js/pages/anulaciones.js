@@ -83,10 +83,12 @@ App.Anulaciones = class Anulaciones {
   _rowHTML(a) {
     var fecha = (a.fecha_generacion || a.fecha_referencia || '').slice(0, 10) || '—';
     var totalDocs = a.total_documentos != null ? a.total_documentos : (a.detalles ? a.detalles.length : '—');
+    var estadoSunat = a.estado_sunat || null;
+    var ticket = a.ticket || '—';
     var isRefreshing = this.refreshing === a.id;
     var isSending = this.sending === a.id;
 
-    var enviarBtn = a.estado_sunat === 'pendiente'
+    var enviarBtn = estadoSunat === 'pendiente'
       ? '<button type="button" data-enviar="' + a.id + '" ' + (isSending ? 'disabled' : '') + ' '
           + 'style="color: rgb(21 128 61); background: transparent; border: none; cursor: pointer; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem; margin-right: 0.25rem;">'
           + '<i data-lucide="' + (isSending ? 'loader-2' : 'send') + '" class="w-[14px] h-[14px] ' + (isSending ? 'icon-spin' : '') + '"></i> Enviar'
@@ -97,8 +99,12 @@ App.Anulaciones = class Anulaciones {
       + '<td class="font-mono font-bold" style="color: rgb(15 23 42);">' + App.escapeHtml(a.identifier) + '</td>'
       + '<td style="color: rgb(71 85 105);">' + App.escapeHtml(fecha) + '</td>'
       + '<td style="text-align: right; font-weight: 700;">' + totalDocs + '</td>'
-      + '<td>' + App.estadoBadgeHTML(a.estado_sunat) + '</td>'
-      + '<td class="text-xs font-mono" style="color: rgb(100 116 139);">' + App.escapeHtml(a.ticket || '—') + '</td>'
+      + '<td>' + App.estadoBadgeHTML(estadoSunat)
+        + (a.sunat_description
+          ? '<div title="' + App.escapeHtml(a.sunat_description) + '" style="font-size:10px;color:rgb(148 163 184);margin-top:2px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + App.escapeHtml(a.sunat_description) + '</div>'
+          : '')
+        + '</td>'
+      + '<td class="text-xs font-mono" style="color: rgb(100 116 139);">' + App.escapeHtml(ticket) + '</td>'
       + '<td style="white-space: nowrap;">'
         + enviarBtn
         + '<button type="button" data-refresh="' + a.id + '" ' + (isRefreshing ? 'disabled' : '') + ' '
@@ -146,7 +152,8 @@ App.Anulaciones = class Anulaciones {
     this._refreshBody();
     try {
       var res = await App.api.listarAnulaciones();
-      this.items = res.data || [];
+      var raw = Array.isArray(res.data) ? res.data : ((res.data && (res.data.datos || res.data.data)) || []);
+      this.items = raw.map(App.normalizeAnulacion);
     } catch (e) {
       this.error = e.message;
     } finally {
@@ -159,8 +166,14 @@ App.Anulaciones = class Anulaciones {
     this.refreshing = id;
     this._refreshBody();
     try {
-      await App.api.estadoAnulacion(id);
-      await this._load();
+      var res = await App.api.estadoAnulacion(id);
+      var updated = App.normalizeAnulacion(res.data || res);
+      for (var i = 0; i < this.items.length; i++) {
+        if (this.items[i].id === id) {
+          this.items[i] = Object.assign({}, this.items[i], updated);
+          break;
+        }
+      }
     } catch (e) {
       alert('Error al refrescar: ' + e.message);
     } finally {
@@ -408,7 +421,7 @@ App.NuevaAnulacionModal = class NuevaAnulacionModal {
         return {
           tipo_documento: d.tipo_documento,
           serie: d.serie.trim().toUpperCase(),
-          correlativo: d.correlativo.trim(),
+          correlativo: String(parseInt(d.correlativo.trim(), 10) || d.correlativo.trim()),
           motivo: d.motivo.trim(),
         };
       }),

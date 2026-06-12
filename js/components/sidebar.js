@@ -29,6 +29,7 @@ var App = window.App || (window.App = {});
       this.onNavigate = opts.onNavigate;
       this.onClose = opts.onClose;
       this.onLogout = opts.onLogout;
+      this.onCollapseDesktop = opts.onCollapseDesktop || null;
       this.root = null;
     }
 
@@ -54,9 +55,14 @@ var App = window.App || (window.App = {});
             + '</h1>'
             + '<p class="text-xs mt-1 font-medium" style="color: rgb(100 116 139);">Sistema ejemplo de facturación</p>'
           + '</div>'
-          + '<button id="sidebar-close" class="lg:hidden p-1" style="color: rgb(148 163 184);">'
-            + '<i data-lucide="x" class="w-5 h-5"></i>'
-          + '</button>'
+          + '<div style="display: flex; align-items: center; gap: 0.25rem;">'
+            + '<button id="sidebar-close" class="lg:hidden p-1" style="color: rgb(148 163 184);">'
+              + '<i data-lucide="x" class="w-5 h-5"></i>'
+            + '</button>'
+            + '<button id="sidebar-collapse" class="hidden lg:block p-1" title="Ocultar menú" style="color: rgb(148 163 184); background: transparent; border: none; cursor: pointer; border-radius: 0.375rem;">'
+              + '<i data-lucide="panel-left-close" class="w-5 h-5"></i>'
+            + '</button>'
+          + '</div>'
         + '</div>'
         + '<nav class="flex-1 flex flex-col gap-1 p-4 overflow-y-auto">'
           + LINKS_TOP.map(function (l) { return self._linkHTML(l); }).join('')
@@ -111,6 +117,9 @@ var App = window.App || (window.App = {});
       });
       var closeBtn = this.root.querySelector('#sidebar-close');
       if (closeBtn && this.onClose) closeBtn.addEventListener('click', function () { self.onClose(); });
+
+      var collapseBtn = this.root.querySelector('#sidebar-collapse');
+      if (collapseBtn && this.onCollapseDesktop) collapseBtn.addEventListener('click', function () { self.onCollapseDesktop(); });
 
       var logoutBtn = this.root.querySelector('#sidebar-logout');
       if (logoutBtn && this.onLogout) logoutBtn.addEventListener('click', function () { self.onLogout(); });

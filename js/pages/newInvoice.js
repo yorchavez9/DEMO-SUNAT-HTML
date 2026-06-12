@@ -12,6 +12,7 @@ App.NewInvoice = class NewInvoice {
     this.cliente = null;
     this.items = [];
     this.cuotas = [];
+    this.descuentosGlobales = [];
     this.sending = false;
     this.pdfFormat = 'ticket-80';
     this.container = null;
@@ -73,6 +74,16 @@ App.NewInvoice = class NewInvoice {
             + '<div id="f-items-table"></div>'
           + '</div>'
           + '<div class="card">'
+            + '<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">'
+              + '<div>'
+                + '<h2 class="section-title" style="margin-bottom: 0;">Descuentos globales <span style="font-size: 0.75rem; font-weight: 400; color: rgb(148 163 184);">(opcional)</span></h2>'
+                + '<p style="font-size: 0.75rem; color: rgb(100 116 139); margin-top: 0.25rem;">Aplicados al total del documento, no por ítem.</p>'
+              + '</div>'
+              + '<button type="button" id="f-add-desc" class="btn-secondary" style="font-size: 0.875rem; display: inline-flex; align-items: center; gap: 0.5rem;"><i data-lucide="plus" class="w-4 h-4"></i> Agregar</button>'
+            + '</div>'
+            + '<div id="f-desc-rows">' + this._descuentosGlobalesHTML() + '</div>'
+          + '</div>'
+          + '<div class="card">'
             + '<label class="label">Observaciones (opcional)</label>'
             + '<textarea id="f-obs" class="input" rows="2" placeholder="Comentarios adicionales...">' + App.escapeHtml(f.observacion) + '</textarea>'
           + '</div>'
@@ -92,9 +103,9 @@ App.NewInvoice = class NewInvoice {
       + '</div>';
 
     var itemsRoot = this.container.querySelector('#f-items-table');
-    itemsRoot.innerHTML = App.itemsTableHTML(this.items, this.form.tipo_moneda);
+    itemsRoot.innerHTML = App.itemsTableHTML(this.items, this.form.tipo_moneda, { showDescuentos: true });
     var self = this;
-    App.bindItemsTable(itemsRoot, function () { return self.items; }, function (n) { self.items = n; }, this.form.tipo_moneda);
+    App.bindItemsTable(itemsRoot, function () { return self.items; }, function (n) { self.items = n; }, this.form.tipo_moneda, { showDescuentos: true });
 
     App.refreshIcons();
   }
@@ -133,6 +144,72 @@ App.NewInvoice = class NewInvoice {
     });
 
     App.bindPdfFormatPicker(this.container, function () { return self.pdfFormat; }, function (v) { self.pdfFormat = v; });
+
+    var addDescBtn = this.container.querySelector('#f-add-desc');
+    if (addDescBtn) addDescBtn.addEventListener('click', function () {
+      self.descuentosGlobales.push({ cod_tipo: '02', monto: '' });
+      self._refreshDescuentosGlobales();
+    });
+    this._bindDescuentosGlobales();
+  }
+
+  _descuentosGlobalesHTML() {
+    var simbolo = this.form.tipo_moneda === 'USD' ? '$' : this.form.tipo_moneda === 'EUR' ? '€' : 'S/';
+    if (this.descuentosGlobales.length === 0) {
+      return '<p style="font-size: 0.875rem; color: rgb(148 163 184);">Sin descuentos globales.</p>';
+    }
+    var total = this.descuentosGlobales.reduce(function (s, d) { return s + (parseFloat(d.monto) || 0); }, 0);
+    return this.descuentosGlobales.map(function (d, i) {
+      return '<div style="display: flex; gap: 0.5rem; align-items: flex-end; margin-bottom: 0.5rem;">'
+        + '<div style="flex: 1;"><label class="label">Tipo</label>'
+          + '<select data-di="' + i + '" data-df="cod_tipo" class="input">'
+            + '<option value="02"' + (d.cod_tipo === '02' ? ' selected' : '') + '>02 – Descuento global (afecta base IGV)</option>'
+            + '<option value="03"' + (d.cod_tipo === '03' ? ' selected' : '') + '>03 – Descuento que NO afecta base IGV</option>'
+          + '</select></div>'
+        + '<div style="width: 9rem;"><label class="label">Monto (' + simbolo + ')</label>'
+          + '<input type="number" data-di="' + i + '" data-df="monto" class="input text-right" value="' + App.escapeHtml(String(d.monto)) + '" placeholder="0.00" min="0.01" step="0.01" /></div>'
+        + '<button type="button" data-dd="' + i + '" style="padding: 0.375rem; color: rgb(239 68 68); background: transparent; border: none; cursor: pointer; flex-shrink: 0; margin-bottom: 2px;">'
+          + '<i data-lucide="x" class="w-4 h-4"></i></button>'
+      + '</div>';
+    }).join('')
+      + '<p style="font-size: 0.75rem; color: rgb(100 116 139); padding-top: 0.5rem; border-top: 1px solid rgb(226 232 240); margin-top: 0.25rem;">'
+        + 'Total descuentos globales: <strong>' + simbolo + ' ' + total.toFixed(2) + '</strong>'
+      + '</p>';
+  }
+
+  _refreshDescuentosGlobales() {
+    var rows = this.container.querySelector('#f-desc-rows');
+    if (rows) {
+      rows.innerHTML = this._descuentosGlobalesHTML();
+      this._bindDescuentosGlobales();
+      App.refreshIcons();
+    }
+  }
+
+  _bindDescuentosGlobales() {
+    var self = this;
+    var rows = this.container.querySelector('#f-desc-rows');
+    if (!rows) return;
+    rows.querySelectorAll('[data-di]').forEach(function (el) {
+      el.addEventListener('input', function () {
+        var idx = parseInt(el.dataset.di);
+        var field = el.dataset.df;
+        if (self.descuentosGlobales[idx]) self.descuentosGlobales[idx][field] = el.value;
+        if (field === 'monto') self._refreshDescuentosGlobales();
+      });
+      el.addEventListener('change', function () {
+        var idx = parseInt(el.dataset.di);
+        var field = el.dataset.df;
+        if (self.descuentosGlobales[idx]) self.descuentosGlobales[idx][field] = el.value;
+      });
+    });
+    rows.querySelectorAll('[data-dd]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var idx = parseInt(btn.dataset.dd);
+        self.descuentosGlobales.splice(idx, 1);
+        self._refreshDescuentosGlobales();
+      });
+    });
   }
 
   _cuotasRowsHTML() {
@@ -259,12 +336,23 @@ App.NewInvoice = class NewInvoice {
         email: this.cliente.email,
       },
       items: this.items.map(function (it) {
-        return Object.assign({}, it, {
+        var item = Object.assign({}, it, {
           cantidad: parseFloat(it.cantidad),
           precio_unitario: parseFloat(it.precio_unitario),
         });
+        var desc = parseFloat(it.descuento_monto) || 0;
+        if (desc > 0) item.descuentos = [{ cod_tipo: '00', monto: parseFloat(desc.toFixed(2)) }];
+        delete item.descuento_monto;
+        return item;
       }),
     });
+
+    var descActivos = this.descuentosGlobales.filter(function (d) { return parseFloat(d.monto) > 0; });
+    if (descActivos.length > 0) {
+      payload.descuentos_globales = descActivos.map(function (d) {
+        return { cod_tipo: d.cod_tipo, monto: parseFloat(parseFloat(d.monto).toFixed(2)) };
+      });
+    }
 
     this.sending = true;
     this._renderHTML();
@@ -275,6 +363,7 @@ App.NewInvoice = class NewInvoice {
       this._showResponse(res, null);
       this.cliente = null;
       this.items = [];
+      this.descuentosGlobales = [];
       this.form.observacion = '';
     } catch (e) {
       this._showResponse(null, e);
