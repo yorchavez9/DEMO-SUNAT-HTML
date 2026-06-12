@@ -139,7 +139,7 @@ var App = window.App || (window.App = {});
       var xmlLoad = self.downloading === d.id + '_xml';
       var cdrLoad = self.downloading === d.id + '_cdr';
       var canAnular = !!TIPO_DOC_MAP[self.tipo] && estado !== 'anulado' && estado !== 'anulacion_en_proceso';
-      var canNota = self.tipo === 'facturas';
+      var canNota = self.tipo === 'facturas' && estado !== 'anulado' && estado !== 'anulacion_en_proceso';
 
       var BTN_BASE = 'display:inline-flex;align-items:center;gap:0.25rem;font-size:0.75rem;font-weight:700;padding:0.25rem 0.5rem;border-radius:0.375rem;background:transparent;border:none;cursor:pointer;';
       var DD_BASE  = 'width:100%;text-align:left;display:flex;align-items:center;gap:0.5rem;padding:0.45rem 0.875rem;font-size:0.8125rem;font-weight:600;background:transparent;border:none;cursor:pointer;';

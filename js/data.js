@@ -13,6 +13,34 @@ App.PRODUCTOS_DEMO = [
   { codigo: 'P008', cod_producto_sunat: '44103105', descripcion: 'CARTUCHO DE TINTA NEGRO 664 BK', unidad: 'NIU', precio_unitario: 45.00, tip_afe_igv: '10', categoria: 'Tecnología' },
   { codigo: 'S003', cod_producto_sunat: '81111811', descripcion: 'DESARROLLO DE PAGINA WEB (PROYECTO)', unidad: 'ZZ', precio_unitario: 3500.00, tip_afe_igv: '10', categoria: 'Servicios' },
   { codigo: 'S004', cod_producto_sunat: '80101604', descripcion: 'CAPACITACION CORPORATIVA (8 HRS)', unidad: 'DAY', precio_unitario: 1200.00, tip_afe_igv: '10', categoria: 'Servicios' },
+  // --- Muebles y Oficina ---
+  { codigo: 'P009', cod_producto_sunat: '56101504', descripcion: 'SILLA DE OFICINA ERGONOMICA CON SOPORTE LUMBAR', unidad: 'NIU', precio_unitario: 450.00, tip_afe_igv: '10', categoria: 'Muebles' },
+  { codigo: 'P010', cod_producto_sunat: '56101503', descripcion: 'ESCRITORIO EJECUTIVO MELAMINA 1.50M', unidad: 'NIU', precio_unitario: 890.00, tip_afe_igv: '10', categoria: 'Muebles' },
+  // --- Papelería ---
+  { codigo: 'P011', cod_producto_sunat: '14111507', descripcion: 'PAPEL BOND A4 75G (RESMA 500 HOJAS)', unidad: 'PK', precio_unitario: 22.00, tip_afe_igv: '10', categoria: 'Papelería' },
+  { codigo: 'P012', cod_producto_sunat: '44121701', descripcion: 'LAPICERO PILOT RETRACTABLE AZUL (CAJA x12)', unidad: 'BX', precio_unitario: 18.50, tip_afe_igv: '10', categoria: 'Papelería' },
+  { codigo: 'P013', cod_producto_sunat: '44122004', descripcion: 'FOLDER MANILA A4 (PAQUETE x25 UNID)', unidad: 'PK', precio_unitario: 8.50, tip_afe_igv: '10', categoria: 'Papelería' },
+  { codigo: 'P014', cod_producto_sunat: '31201501', descripcion: 'CINTA ADHESIVA TRANSPARENTE 24MM x 65M', unidad: 'NIU', precio_unitario: 4.50, tip_afe_igv: '10', categoria: 'Papelería' },
+  // --- Alimentos y Bebidas ---
+  { codigo: 'P015', cod_producto_sunat: '50202302', descripcion: 'AGUA DE MESA SAN LUIS 625ML', unidad: 'BO', precio_unitario: 1.50, tip_afe_igv: '10', categoria: 'Alimentos y Bebidas' },
+  { codigo: 'P016', cod_producto_sunat: '50161502', descripcion: 'CAFE ALTOMAYO GOURMET MOLIDO 500G', unidad: 'NIU', precio_unitario: 28.00, tip_afe_igv: '10', categoria: 'Alimentos y Bebidas' },
+  { codigo: 'P017', cod_producto_sunat: '50231706', descripcion: 'ARROZ SUPERIOR COSTEÑO 5KG', unidad: 'BG', precio_unitario: 24.50, tip_afe_igv: '20', categoria: 'Alimentos y Bebidas (exonerado)' },
+  { codigo: 'P018', cod_producto_sunat: '50291505', descripcion: 'ACEITE VEGETAL PRIMOR 1 LITRO', unidad: 'BO', precio_unitario: 9.80, tip_afe_igv: '10', categoria: 'Alimentos y Bebidas' },
+  // --- Construcción y Materiales ---
+  { codigo: 'P019', cod_producto_sunat: '31211601', descripcion: 'PINTURA LATEX INTERIOR BLANCA 4 GALONES', unidad: 'NIU', precio_unitario: 185.00, tip_afe_igv: '10', categoria: 'Construcción' },
+  { codigo: 'P020', cod_producto_sunat: '30111601', descripcion: 'CEMENTO PORTLAND TIPO I PACASMAYO 42.5KG', unidad: 'BG', precio_unitario: 32.00, tip_afe_igv: '10', categoria: 'Construcción' },
+  { codigo: 'P021', cod_producto_sunat: '26121613', descripcion: 'CABLE ELECTRICO NYY 2.5MM ROLLO 100M', unidad: 'ROL', precio_unitario: 420.00, tip_afe_igv: '10', categoria: 'Materiales Eléctricos' },
+  // --- Ropa y Calzado ---
+  { codigo: 'P022', cod_producto_sunat: '53101700', descripcion: 'POLO DE ALGODON UNISEX TALLA M', unidad: 'NIU', precio_unitario: 18.00, tip_afe_igv: '10', categoria: 'Ropa y Calzado' },
+  { codigo: 'P023', cod_producto_sunat: '53111602', descripcion: 'ZAPATILLA DEPORTIVA ADIDAS TALLA 42', unidad: 'PAR', precio_unitario: 280.00, tip_afe_igv: '10', categoria: 'Ropa y Calzado' },
+  // --- Limpieza ---
+  { codigo: 'P024', cod_producto_sunat: '47131503', descripcion: 'LEJIA CLOROX DESINFECTANTE 1 LITRO', unidad: 'BO', precio_unitario: 5.50, tip_afe_igv: '10', categoria: 'Limpieza' },
+  { codigo: 'P025', cod_producto_sunat: '47131812', descripcion: 'DETERGENTE ARIEL MULTIACTION 4KG', unidad: 'NIU', precio_unitario: 52.00, tip_afe_igv: '10', categoria: 'Limpieza' },
+  // --- Servicios adicionales ---
+  { codigo: 'S005', cod_producto_sunat: '82141501', descripcion: 'SERVICIO DE DISEÑO GRAFICO (HORA)', unidad: 'HUR', precio_unitario: 80.00, tip_afe_igv: '10', categoria: 'Servicios' },
+  { codigo: 'S006', cod_producto_sunat: '81111812', descripcion: 'HOSTING WEB + DOMINIO .PE (ANUAL)', unidad: 'ZZ', precio_unitario: 350.00, tip_afe_igv: '10', categoria: 'Servicios' },
+  { codigo: 'S007', cod_producto_sunat: '76111501', descripcion: 'SERVICIO DE LIMPIEZA DE OFICINA (DIARIO)', unidad: 'DAY', precio_unitario: 120.00, tip_afe_igv: '10', categoria: 'Servicios' },
+  { codigo: 'S008', cod_producto_sunat: '84111504', descripcion: 'AUDITORIA Y ASESORIA CONTABLE (SERVICIO)', unidad: 'ZZ', precio_unitario: 2800.00, tip_afe_igv: '10', categoria: 'Servicios' },
 ];
 
 App.CLIENTES_DEMO = [

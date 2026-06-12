@@ -92,27 +92,34 @@ App.itemsTableHTML = function (items, moneda, opts) {
       + 'Sin productos. Haz clic en "Agregar producto" arriba.</div>';
   }
 
+  // El descuento (cod_tipo "00") se aplica sobre la BASE sin IGV.
+  // precio_unitario viene con IGV → base = precio / 1.18
   var totales = items.reduce(function (acc, it) {
-    var c = parseFloat(it.cantidad) || 0;
-    var p = parseFloat(it.precio_unitario) || 0;
-    var d = showDescuentos ? (parseFloat(it.descuento_monto) || 0) : 0;
-    var subtotal = c * p - d;
+    var c   = parseFloat(it.cantidad) || 0;
+    var p   = parseFloat(it.precio_unitario) || 0;
+    var d   = showDescuentos ? (parseFloat(it.descuento_monto) || 0) : 0;
     var afe = it.tip_afe_igv || '10';
     if (afe === '10') {
-      var bg = subtotal / 1.18;
-      acc.baseGravada += bg;
-      acc.igv += subtotal - bg;
-    } else if (afe === '20' || afe === '30') {
-      acc.baseNoGravada += subtotal;
+      var netBase = Math.max(0, (p / 1.18) * c - d);
+      acc.baseGravada += netBase;
+      acc.igv         += netBase * 0.18;
+      acc.subtotal    += netBase * 1.18;
+    } else {
+      var net = Math.max(0, p * c - d);
+      acc.baseNoGravada += net;
+      acc.subtotal      += net;
     }
-    acc.subtotal += subtotal;
     return acc;
   }, { subtotal: 0, baseGravada: 0, baseNoGravada: 0, igv: 0 });
 
   var rows = items.map(function (it, idx) {
-    var subtotal = (parseFloat(it.cantidad) || 0) * (parseFloat(it.precio_unitario) || 0);
-    var descuento = showDescuentos ? (parseFloat(it.descuento_monto) || 0) : 0;
-    var total = subtotal - descuento;
+    var c   = parseFloat(it.cantidad) || 0;
+    var p   = parseFloat(it.precio_unitario) || 0;
+    var d   = showDescuentos ? (parseFloat(it.descuento_monto) || 0) : 0;
+    var afe = it.tip_afe_igv || '10';
+    var total = afe === '10'
+      ? Math.max(0, (p / 1.18) * c - d) * 1.18
+      : Math.max(0, p * c - d);
     return ''
       + '<tr>'
       + '<td>'
@@ -152,7 +159,7 @@ App.itemsTableHTML = function (items, moneda, opts) {
           + '<th style="width: 6rem; text-align: right;">Cantidad</th>'
           + '<th style="width: 7rem; text-align: right;">Precio Unit.</th>'
           + '<th style="width: 7rem;">IGV</th>'
-          + (showDescuentos ? '<th style="width: 6rem; text-align: right; color: rgb(234 88 12);">Desc.</th>' : '')
+          + (showDescuentos ? '<th style="width: 6rem; text-align: right; color: rgb(234 88 12);" title="Descuento sobre el valor base sin IGV">Desc. (s/IGV)</th>' : '')
           + '<th style="width: 7rem; text-align: right;">Total</th>'
           + '<th style="width: 3rem;"></th>'
         + '</tr></thead>'
@@ -178,14 +185,20 @@ App.bindItemsTable = function (container, getItems, setItems, moneda, opts) {
   function updateLiveTotals() {
     var items = getItems();
     var totales = items.reduce(function (acc, it) {
-      var c = parseFloat(it.cantidad) || 0;
-      var p = parseFloat(it.precio_unitario) || 0;
-      var d = showDescuentos ? (parseFloat(it.descuento_monto) || 0) : 0;
-      var subtotal = c * p - d;
+      var c   = parseFloat(it.cantidad) || 0;
+      var p   = parseFloat(it.precio_unitario) || 0;
+      var d   = showDescuentos ? (parseFloat(it.descuento_monto) || 0) : 0;
       var afe = it.tip_afe_igv || '10';
-      if (afe === '10') { var bg = subtotal / 1.18; acc.baseGravada += bg; acc.igv += subtotal - bg; }
-      else if (afe === '20' || afe === '30') { acc.baseNoGravada += subtotal; }
-      acc.subtotal += subtotal;
+      if (afe === '10') {
+        var netBase = Math.max(0, (p / 1.18) * c - d);
+        acc.baseGravada += netBase;
+        acc.igv         += netBase * 0.18;
+        acc.subtotal    += netBase * 1.18;
+      } else {
+        var net = Math.max(0, p * c - d);
+        acc.baseNoGravada += net;
+        acc.subtotal      += net;
+      }
       return acc;
     }, { subtotal: 0, baseGravada: 0, baseNoGravada: 0, igv: 0 });
 
@@ -193,11 +206,15 @@ App.bindItemsTable = function (container, getItems, setItems, moneda, opts) {
     items.forEach(function (it, idx) {
       var row = rows[idx];
       if (!row) return;
-      var c = parseFloat(it.cantidad) || 0;
-      var p = parseFloat(it.precio_unitario) || 0;
-      var d = showDescuentos ? (parseFloat(it.descuento_monto) || 0) : 0;
+      var c   = parseFloat(it.cantidad) || 0;
+      var p   = parseFloat(it.precio_unitario) || 0;
+      var d   = showDescuentos ? (parseFloat(it.descuento_monto) || 0) : 0;
+      var afe = it.tip_afe_igv || '10';
+      var rowTotal = afe === '10'
+        ? Math.max(0, (p / 1.18) * c - d) * 1.18
+        : Math.max(0, p * c - d);
       var cell = row.querySelector('[data-total]');
-      if (cell) cell.textContent = simbolo + ' ' + (c * p - d).toFixed(2);
+      if (cell) cell.textContent = simbolo + ' ' + rowTotal.toFixed(2);
     });
 
     var summaryWrap = container.querySelector(':scope > div:last-child');
