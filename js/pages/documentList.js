@@ -42,6 +42,26 @@ var App = window.App || (window.App = {});
     'notas-debito':  '08',
   };
 
+  // ─── Dropdown de acciones (móvil/tablet) ──────────────
+  // El menú usa position:fixed para escapar del recorte de .table-wrap
+  // (overflow-x:auto también recorta en vertical). Como queda anclado al
+  // viewport, hay que cerrarlo ante cualquier scroll o resize.
+  function cerrarDropdowns() {
+    document.querySelectorAll('.row-dropdown').forEach(function (m) { m.style.display = 'none'; });
+  }
+
+  var globalHandlersBound = false;
+  function bindGlobalDropdownHandlers() {
+    if (globalHandlersBound) return;
+    globalHandlersBound = true;
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('[data-dd-toggle]') && !e.target.closest('.row-dropdown')) cerrarDropdowns();
+    });
+    // capture: el scroll de contenedores internos no burbujea hasta window
+    window.addEventListener('scroll', cerrarDropdowns, true);
+    window.addEventListener('resize', cerrarDropdowns);
+  }
+
   App.DocumentList = class DocumentList {
     constructor(tipo) {
       this.tipo = tipo;
@@ -90,7 +110,7 @@ var App = window.App || (window.App = {});
             + '<style>'
             + '@media (min-width: 640px) { .filter-row { flex-direction: row !important; align-items: flex-end !important; } }'
             + '@media (min-width: 1024px) { .actions-mobile { display: none !important; } }'
-            + '@media (max-width: 1023px) { .actions-desktop { display: none !important; } }'
+            + '@media (max-width: 1023px) { .actions-desktop { display: none !important; } .actions-mobile { display: block !important; } }'
             + '</style>'
           + '</div>'
           + '<div class="card" id="dl-body">' + this._bodyHTML() + '</div>'
@@ -188,13 +208,13 @@ var App = window.App || (window.App = {});
         + '<td>' + App.estadoBadgeHTML(estado) + '</td>'
         + '<td style="position:relative;">'
           + '<div class="actions-desktop" style="display:flex;align-items:center;gap:0.25rem;flex-wrap:wrap;">' + inlineBtns + '</div>'
-          + '<div class="actions-mobile" style="position:relative;display:none;">'
+          + '<div class="actions-mobile">'
             + '<button type="button" data-dd-toggle="' + ddId + '" '
               + 'style="display:inline-flex;align-items:center;padding:0.3rem 0.4rem;border-radius:0.375rem;color:rgb(100 116 139);background:transparent;border:none;cursor:pointer;">'
               + '<i data-lucide="more-vertical" class="w-4 h-4"></i>'
             + '</button>'
             + '<div id="' + ddId + '" class="row-dropdown" '
-              + 'style="display:none;position:absolute;right:0;top:100%;min-width:9.5rem;background:white;border:1px solid rgb(226 232 240);border-radius:0.75rem;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:30;padding:0.25rem 0;overflow:hidden;">'
+              + 'style="display:none;position:fixed;top:0;left:0;min-width:9.5rem;background:white;border:1px solid rgb(226 232 240);border-radius:0.75rem;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:40;padding:0.25rem 0;overflow:hidden;">'
               + ddItems
             + '</div>'
           + '</div>'
@@ -220,23 +240,32 @@ var App = window.App || (window.App = {});
       this._bindAnular();
       this._bindNota();
       this._bindDropdowns();
-      document.addEventListener('click', function (e) {
-        if (!e.target.closest('[data-dd-toggle]') && !e.target.closest('.row-dropdown')) {
-          document.querySelectorAll('.row-dropdown').forEach(function (m) { m.style.display = 'none'; });
-        }
-      });
+      bindGlobalDropdownHandlers();
     }
 
     _bindDropdowns() {
       this.container.querySelectorAll('[data-dd-toggle]').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
           e.stopPropagation();
-          var ddId = btn.dataset.ddToggle;
-          var menu = document.getElementById(ddId);
+          var menu = document.getElementById(btn.dataset.ddToggle);
           if (!menu) return;
-          var isOpen = menu.style.display !== 'none';
-          document.querySelectorAll('.row-dropdown').forEach(function (m) { m.style.display = 'none'; });
-          if (!isOpen) menu.style.display = 'block';
+          var estabaAbierto = menu.style.display !== 'none';
+          cerrarDropdowns();
+          if (estabaAbierto) return;
+
+          // Mostrar oculto para poder medirlo antes de posicionarlo
+          menu.style.visibility = 'hidden';
+          menu.style.display = 'block';
+
+          var r = btn.getBoundingClientRect();
+          var alto = menu.offsetHeight;
+          var ancho = menu.offsetWidth;
+          // Si no cabe abajo pero sí arriba, lo abrimos hacia arriba
+          var abrirArriba = (r.bottom + alto + 8 > window.innerHeight) && (r.top - alto - 8 > 0);
+
+          menu.style.top = (abrirArriba ? r.top - alto - 4 : r.bottom + 4) + 'px';
+          menu.style.left = Math.max(8, Math.min(r.right - ancho, window.innerWidth - ancho - 8)) + 'px';
+          menu.style.visibility = '';
         });
       });
     }
