@@ -10,8 +10,9 @@ App.ProductPicker = class ProductPicker {
 
   _filtered() {
     var q = this.query.toLowerCase().trim();
-    if (!q) return App.PRODUCTOS_DEMO;
-    return App.PRODUCTOS_DEMO.filter(function (p) {
+    var productos = App.DB.productosActivos();
+    if (!q) return productos;
+    return productos.filter(function (p) {
       return p.descripcion.toLowerCase().includes(q)
         || p.codigo.toLowerCase().includes(q)
         || p.categoria.toLowerCase().includes(q);
@@ -93,7 +94,7 @@ App.ProductPicker = class ProductPicker {
     var self = this;
     this.overlay.querySelectorAll('[data-code]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var prod = App.PRODUCTOS_DEMO.find(function (p) { return p.codigo === btn.dataset.code; });
+        var prod = App.DB.productoPorCodigo(btn.dataset.code);
         if (prod) {
           self.onSelect(prod);
           self._close();

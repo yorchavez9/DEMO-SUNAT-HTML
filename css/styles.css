@@ -285,10 +285,10 @@ select.input {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.625rem 0.75rem;
+  padding: 0.6875rem 0.75rem;
   border-radius: 0.75rem;
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.9375rem;
+  font-weight: 700;
   color: rgb(51 65 85);
   transition: all 0.15s;
   text-decoration: none;
@@ -312,6 +312,107 @@ select.input {
   padding: 0 0.75rem;
   margin-top: 1.25rem;
   margin-bottom: 0.5rem;
+}
+
+/* ── Submenús plegables del sidebar ─────────────────────── */
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-group-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6875rem 0.75rem;
+  border: none;
+  border-radius: 0.75rem;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: rgb(51 65 85);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+.nav-group-btn:hover {
+  background-color: rgb(241 245 249);
+}
+.nav-group-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.25);
+}
+/* Grupo que contiene la página actual: se resalta aunque esté plegado */
+.nav-group-btn.has-active {
+  color: rgb(15 23 42);
+  font-weight: 800;
+}
+
+.nav-group-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.nav-group-left span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-group-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.nav-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+  background-color: rgb(37 99 235);
+}
+
+.nav-chevron {
+  color: rgb(148 163 184);
+  transition: transform 0.2s ease;
+}
+.nav-group.is-open .nav-chevron {
+  transform: rotate(180deg);
+}
+
+.nav-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 0.875rem;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.24s ease, opacity 0.18s ease, margin-top 0.24s ease;
+}
+.nav-group.is-open .nav-sub {
+  max-height: 26rem;
+  opacity: 1;
+  margin-top: 2px;
+}
+
+.nav-link-sub {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: rgb(71 85 105);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-sub,
+  .nav-chevron {
+    transition: none;
+  }
 }
 
 /* Spin animation for Lucide icons */

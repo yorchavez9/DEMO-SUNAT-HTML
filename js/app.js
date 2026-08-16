@@ -6,6 +6,7 @@
 
   var router = new App.Router([
     { path: '/login',              handler: function () { return new App.Login(); } },
+    { path: '/registro',           handler: function () { return new App.Registro(); } },
     { path: '/',                   handler: function () { return new App.Dashboard(); } },
     { path: '/configuracion',      handler: function () { return new App.Settings(); } },
     { path: '/nueva-factura',      handler: function () { return new App.NewInvoice(); } },
@@ -16,6 +17,11 @@
     { path: '/resumenes',          handler: function () { return new App.Summaries(); } },
     { path: '/anulaciones',        handler: function () { return new App.Anulaciones(); } },
     { path: '/documentos/:tipo',   handler: function (params) { return new App.DocumentList(params.tipo); } },
+    { path: '/productos',          handler: function () { return new App.Productos(); } },
+    { path: '/clientes',           handler: function () { return new App.Contactos('clientes'); } },
+    { path: '/proveedores',        handler: function () { return new App.Contactos('proveedores'); } },
+    { path: '/compras',            handler: function () { return new App.Compras(); } },
+    { path: '/inventario',         handler: function () { return new App.Inventario(); } },
   ]);
 
   function toggleSidebar(open) {
@@ -52,6 +58,7 @@
   }
 
   function renderShell(currentPath) {
+    var marca = App.branding();
     root.innerHTML = ''
       + '<div class="min-h-screen flex" style="background: rgb(248 250 252);">'
         + '<div id="app-overlay" class="fixed inset-0 z-30 hidden lg:hidden" style="background: rgb(15 23 42 / 0.5); backdrop-filter: blur(4px);"></div>'
@@ -68,10 +75,10 @@
               + '<i data-lucide="menu" class="w-5 h-5"></i>'
             + '</button>'
             + '<div class="flex items-center gap-2">'
-              + '<span class="w-7 h-7 rounded-lg flex items-center justify-center" style="background: rgb(37 99 235); color: white;">'
-                + '<i data-lucide="file-digit" class="w-4 h-4"></i>'
+              + '<span id="marca-icono" class="w-7 h-7 rounded-lg flex items-center justify-center" style="background: ' + marca.color + '; color: white;">'
+                + '<i data-lucide="' + marca.icono + '" class="w-4 h-4"></i>'
               + '</span>'
-              + '<span class="font-extrabold text-sm tracking-tight" style="color: rgb(15 23 42);">SUNAT Demo</span>'
+              + '<span id="marca-nombre" class="font-extrabold text-sm tracking-tight" style="color: rgb(15 23 42);">' + App.escapeHtml(marca.nombre) + '</span>'
             + '</div>'
             + '<div class="w-9"></div>'
           + '</header>'
@@ -104,34 +111,60 @@
     App.refreshIcons();
   }
 
+  /** Refresca el nombre y el ícono del negocio sin recargar la página. */
+  App.refrescarMarca = function () {
+    var m = App.branding();
+    if (sidebar) sidebar.update(router.currentPath());
+    var icono = document.getElementById('marca-icono');
+    var nombre = document.getElementById('marca-nombre');
+    if (icono) {
+      icono.style.background = m.color;
+      icono.innerHTML = '<i data-lucide="' + m.icono + '" class="w-4 h-4"></i>';
+    }
+    if (nombre) nombre.textContent = m.nombre;
+    App.refreshIcons();
+  };
+
   router.onNavigate(function (page, path) {
-    // 1) No autenticado → forzar /login
-    if (!App.isLoggedIn() && path !== '/login') {
+    var hayUsuarios = App.hayUsuarios();
+
+    // 1) Primera vez: no existe ninguna cuenta → crear la del primer usuario
+    if (!hayUsuarios && path !== '/registro') {
+      router.navigate('/registro');
+      return;
+    }
+    if (hayUsuarios && path === '/registro') {
+      router.navigate(App.isLoggedIn() ? '/' : '/login');
+      return;
+    }
+
+    // 2) No autenticado → forzar /login
+    if (hayUsuarios && !App.isLoggedIn() && path !== '/login') {
       router.navigate('/login');
       return;
     }
 
-    // 2) Autenticado + /login → mandar al inicio
+    // 3) Autenticado + /login → mandar al inicio
     if (App.isLoggedIn() && path === '/login') {
       router.navigate('/');
       return;
     }
 
-    // 3) /login se renderiza sin shell (pantalla completa)
-    if (path === '/login') {
+    // 4) /login y /registro se renderizan sin shell (pantalla completa)
+    if (path === '/login' || path === '/registro') {
       sidebar = null;
       root.innerHTML = '';
       page.render(root, router);
       return;
     }
 
-    // 4) Autenticado pero sin config → /configuracion
+    // 5) Autenticado pero sin config → /configuracion
     if (!App.isConfigured() && path !== '/configuracion') {
       router.navigate('/configuracion');
       return;
     }
 
-    // 5) Renderizado normal con shell
+    // 6) Renderizado normal con shell
     if (!document.getElementById('sidebar-content')) {
       renderShell(path);
     } else {
@@ -143,5 +176,37 @@
     page.render(container, router);
   });
 
-  router.start();
+  /**
+   * Red de seguridad: solo se ve si falta data/seed.js (por ejemplo si se copió
+   * la carpeta sin ese archivo). Con seed.js presente el sistema arranca igual
+   * abriendo index.html con doble clic que servido por HTTP.
+   */
+  function pantallaSinDatos(err) {
+    root.innerHTML = ''
+      + '<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem; background: rgb(241 245 249);">'
+        + '<div class="card" style="max-width: 32rem;">'
+          + '<h1 class="section-title" style="color: rgb(153 27 27);">'
+            + '<i data-lucide="database-backup" class="w-5 h-5"></i> Faltan los datos del sistema'
+          + '</h1>'
+          + '<p style="color: rgb(51 65 85); line-height: 1.6;">'
+            + 'No se encontró el archivo <code style="background: rgb(241 245 249); padding: 0.125rem 0.375rem; border-radius: 0.375rem;">data/seed.js</code>. '
+            + 'Asegúrate de copiar la carpeta completa, con <strong>data/</strong>, <strong>css/</strong> y <strong>js/</strong> junto a index.html.'
+          + '</p>'
+          + '<p class="text-xs font-mono" style="color: rgb(148 163 184); margin-top: 1rem;">' + App.escapeHtml(err && err.message) + '</p>'
+          + '<button id="reintentar" class="btn-primary" style="margin-top: 1.25rem;">'
+            + '<i data-lucide="refresh-cw" class="w-4 h-4"></i> Reintentar</button>'
+        + '</div>'
+      + '</div>';
+    App.refreshIcons();
+    document.getElementById('reintentar').addEventListener('click', function () { window.location.reload(); });
+  }
+
+  // Los datos (productos, clientes, proveedores, compras, inventario) tienen que
+  // estar en memoria antes de renderizar cualquier página.
+  App.DB.init()
+    .then(function () {
+      App.aplicarTitulo();
+      router.start();
+    })
+    .catch(pantallaSinDatos);
 })();

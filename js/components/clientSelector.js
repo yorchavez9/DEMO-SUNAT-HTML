@@ -138,7 +138,7 @@ App.openClientManualModal = function (onConfirm) {
           + '<div style="display: flex; gap: 0.75rem;">'
             + '<div style="flex: 0 0 auto; width: 11rem;">'
               + '<label class="label">Tipo de doc.</label>'
-              + '<select id="cm-tipo" class="input">' + tiposOpts + '</select>'
+              + '<select id="cm-tipo" class="input js-select">' + tiposOpts + '</select>'
             + '</div>'
             + '<div style="flex: 1;">'
               + '<label class="label">N° de documento</label>'

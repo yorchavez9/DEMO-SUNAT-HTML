@@ -86,8 +86,64 @@ var App = window.App || (window.App = {});
     return normalized;
   }
 
+  /**
+   * Igual que request() pero con FormData (logo, certificado). No se pone
+   * Content-Type a mano: el navegador tiene que añadir el boundary del
+   * multipart, y si lo fijamos nosotros la petición llega rota.
+   */
+  async function upload(path, formData) {
+    var cfg = App.getConfig();
+    if (!cfg.api_key || !cfg.api_secret) {
+      throw new Error('Falta configurar api_key y api_secret en Configuración.');
+    }
+
+    var response = await fetch(cfg.base_url.replace(/\/$/, '') + path, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'X-Api-Key': cfg.api_key,
+        'X-Api-Secret': cfg.api_secret,
+      },
+      body: formData,
+    });
+
+    var raw = await response.json().catch(function () { return {}; });
+    var normalized = {
+      success: raw.estado === 'exito' || raw.success === true,
+      message: raw.mensaje != null ? raw.mensaje : raw.message,
+      data: raw.datos != null ? raw.datos : raw.data,
+      errors: raw.errores != null ? raw.errores : raw.errors,
+    };
+
+    if (!response.ok || !normalized.success) {
+      var err = new Error(normalized.message || ('Error ' + response.status));
+      err.status = response.status;
+      err.errors = normalized.errors;
+      throw err;
+    }
+    return normalized;
+  }
+
   App.api = {
+    // ─── Empresa (01. Configuración inicial) ───────────────────
     getEmpresa: function () { return request('GET', '/empresa'); },
+    actualizarEmpresa: function (data) { return request('PUT', '/empresa', data); },
+    getCredenciales: function () { return request('GET', '/empresa/credenciales'); },
+    listarPlanes: function () { return request('GET', '/planes'); },
+    getSuscripcion: function () { return request('GET', '/suscripcion'); },
+
+    subirLogo: function (file) {
+      var fd = new FormData();
+      fd.append('logo', file);
+      return upload('/empresa/logo', fd);
+    },
+
+    subirCertificado: function (file, contrasena) {
+      var fd = new FormData();
+      fd.append('certificado', file);
+      fd.append('contrasena_certificado', contrasena || '');
+      return upload('/empresa/certificado', fd);
+    },
 
     listSucursales: function () { return request('GET', '/sucursales'); },
     listSeries: function (params) { return request('GET', '/series' + (params || '')); },

@@ -13,8 +13,9 @@ App.ClientPicker = class ClientPicker {
 
   _filtered() {
     var q = this.query.toLowerCase().trim();
-    if (!q) return App.CLIENTES_DEMO;
-    return App.CLIENTES_DEMO.filter(function (c) {
+    var clientes = App.DB.clientesActivos();
+    if (!q) return clientes;
+    return clientes.filter(function (c) {
       return c.razon_social.toLowerCase().includes(q) || c.num_doc.includes(q);
     });
   }
@@ -144,7 +145,7 @@ App.ClientPicker = class ClientPicker {
 
     this.overlay.querySelectorAll('[data-use]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var c = App.CLIENTES_DEMO.find(function (x) { return x.num_doc === btn.dataset.use; });
+        var c = App.DB.clientesActivos().find(function (x) { return x.num_doc === btn.dataset.use; });
         if (c) {
           self.onSelect(c);
           self._close();

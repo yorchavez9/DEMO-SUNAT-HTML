@@ -43,12 +43,12 @@ var App = window.App || (window.App = {});
                 + '<div><label class="label">Fecha</label>'
                   + '<input id="b-fecha" type="date" class="input" value="' + App.escapeHtml(f.fecha_emision) + '" required /></div>'
                 + '<div><label class="label">Moneda</label>'
-                  + '<select id="b-moneda" class="input">'
+                  + '<select id="b-moneda" class="input js-select">'
                     + '<option value="PEN"' + (f.tipo_moneda === 'PEN' ? ' selected' : '') + '>PEN</option>'
                     + '<option value="USD"' + (f.tipo_moneda === 'USD' ? ' selected' : '') + '>USD</option>'
                   + '</select></div>'
                 + '<div><label class="label">Forma de pago</label>'
-                  + '<select id="b-pago" class="input">'
+                  + '<select id="b-pago" class="input js-select">'
                     + '<option value="Contado"' + (f.forma_pago === 'Contado' ? ' selected' : '') + '>Contado</option>'
                     + '<option value="Credito"' + (f.forma_pago === 'Credito' ? ' selected' : '') + '>Crédito</option>'
                   + '</select></div>'
@@ -189,7 +189,7 @@ var App = window.App || (window.App = {});
       return this.descuentosGlobales.map(function (d, i) {
         return '<div style="display: flex; gap: 0.5rem; align-items: flex-end; margin-bottom: 0.5rem;">'
           + '<div style="flex: 1;"><label class="label">Tipo</label>'
-            + '<select data-di="' + i + '" data-df="cod_tipo" class="input">'
+            + '<select data-di="' + i + '" data-df="cod_tipo" class="input js-select">'
               + '<option value="02"' + (d.cod_tipo === '02' ? ' selected' : '') + '>02 – Descuento global (afecta base IGV)</option>'
               + '<option value="03"' + (d.cod_tipo === '03' ? ' selected' : '') + '>03 – Descuento que NO afecta base IGV</option>'
             + '</select></div>'
@@ -384,6 +384,8 @@ var App = window.App || (window.App = {});
 
       try {
         var res = await App.api.crearBoleta(payload);
+        // La venta emitida descuenta stock del inventario de la ferretería
+        App.DB.registrarVenta(payload.items, 'Venta · Boleta ' + App.refDocumento(res));
         this._showResponse(res, null);
         this.items = [];
         this.descuentosGlobales = [];

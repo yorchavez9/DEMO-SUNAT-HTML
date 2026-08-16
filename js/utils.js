@@ -99,6 +99,34 @@ App.bindPdfFormatPicker = function (container, getFormat, setFormat) {
   });
 };
 
+/**
+ * Identidad visual del negocio: sale de los datos de la empresa y del rubro
+ * elegido, así que el sistema se ve distinto según el rubro sin tocar código.
+ */
+App.branding = function () {
+  var e = App.DB.empresa();
+  var r = App.DB.rubro();
+  return {
+    nombre: e.nombre_comercial || e.razon_social || (r ? r.nombre : 'Mi Empresa'),
+    rubro: r ? r.nombre : 'Facturación electrónica',
+    descripcion: r ? r.nombre + ' · Facturación electrónica' : 'Sistema de facturación electrónica',
+    icono: (r && r.icono) || 'file-digit',
+    color: (r && r.color) || '#2563eb',
+  };
+};
+
+App.aplicarTitulo = function () {
+  var b = App.branding();
+  document.title = b.nombre + ' — Facturación electrónica SUNAT';
+};
+
+/** "F001-00000123" a partir de la respuesta de la API (vacío si no viene). */
+App.refDocumento = function (res) {
+  var d = res && res.data ? res.data : res;
+  if (!d) return '';
+  return [d.serie, d.correlativo != null ? d.correlativo : d.numero].filter(Boolean).join('-');
+};
+
 App.refreshIcons = function () {
   if (window.lucide && window.lucide.createIcons) {
     window.lucide.createIcons({ nameAttr: 'data-lucide' });

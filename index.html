@@ -2,10 +2,10 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📄%3C/text%3E%3C/svg%3E" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🧾%3C/text%3E%3C/svg%3E" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#2563eb" />
-    <title>Demo API SUNAT PRO — HTML/JS</title>
+    <title>Facturación electrónica SUNAT</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -29,18 +29,27 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 
     <link rel="stylesheet" href="./css/styles.css" />
+    <link rel="stylesheet" href="./css/components/select.css" />
   </head>
   <body>
     <div id="root"></div>
 
-    <!-- Orden por dependencias: base → api → router → components → pages → app -->
-    <script src="./js/data.js"></script>
+    <!-- Orden por dependencias: semilla → base → datos → api → router → components → pages → app -->
+
+    <!-- Datos de ejemplo. Va como <script> (no fetch) para que el sistema
+         funcione también al abrir este archivo con doble clic.
+         Generado con: node data/build-seed.js -->
+    <script src="./data/seed.js"></script>
+
     <script src="./js/utils.js"></script>
     <script src="./js/store.js"></script>
+    <script src="./js/store/db.js"></script>
     <script src="./js/api.js"></script>
     <script src="./js/router.js"></script>
 
+    <script src="./js/components/select.js"></script>
     <script src="./js/components/sidebar.js"></script>
+    <script src="./js/components/modal.js"></script>
     <script src="./js/components/clientSelector.js"></script>
     <script src="./js/components/itemsTable.js"></script>
     <script src="./js/components/productPicker.js"></script>
@@ -48,8 +57,13 @@
     <script src="./js/components/responseModal.js"></script>
 
     <script src="./js/pages/login.js"></script>
+    <script src="./js/pages/registro.js"></script>
     <script src="./js/pages/settings.js"></script>
     <script src="./js/pages/dashboard.js"></script>
+    <script src="./js/pages/productos.js"></script>
+    <script src="./js/pages/contactos.js"></script>
+    <script src="./js/pages/compras.js"></script>
+    <script src="./js/pages/inventario.js"></script>
     <script src="./js/pages/newInvoice.js"></script>
     <script src="./js/pages/newBoleta.js"></script>
     <script src="./js/pages/newCreditNote.js"></script>
