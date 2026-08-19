@@ -16,8 +16,6 @@ var App = window.App || (window.App = {});
     constructor() {
       this.container = null;
       this.router = null;
-      this.q = '';
-      this.filtro = 'todos'; // todos | bajo | sin
       this.ajustando = null; // producto sobre el que se hace el ajuste
       this.historialDe = null;
     }
@@ -29,19 +27,8 @@ var App = window.App || (window.App = {});
       this._bind();
     }
 
-    _filtrados() {
-      var q = this.q.toLowerCase().trim();
-      var filtro = this.filtro;
-      return App.DB.all('productos').filter(function (p) {
-        if (p.controla_stock === false) return false;
-        var stock = Number(p.stock || 0);
-        if (filtro === 'bajo' && !(stock > 0 && stock <= Number(p.stock_min || 0))) return false;
-        if (filtro === 'sin' && stock > 0) return false;
-        if (!q) return true;
-        return p.descripcion.toLowerCase().includes(q)
-          || p.codigo.toLowerCase().includes(q)
-          || (p.categoria || '').toLowerCase().includes(q);
-      });
+    _conStock() {
+      return App.DB.all('productos').filter(function (p) { return p.controla_stock !== false; });
     }
 
     // ─── Render ─────────────────────────────────────────────────
@@ -51,42 +38,21 @@ var App = window.App || (window.App = {});
           + '<h1 class="page-title"><i data-lucide="warehouse" class="w-7 h-7"></i> Inventario</h1>'
           + this._kpisHTML()
 
-          + '<div class="card" style="margin-bottom: 1rem;">'
-            + '<div style="display: grid; grid-template-columns: 1fr; gap: 0.75rem;" class="inv-grid">'
-              + '<div>'
-                + '<label class="label">Buscar</label>'
-                + '<input id="in-buscar" class="input" placeholder="Producto, código o categoría..." value="' + App.escapeHtml(this.q) + '" />'
-              + '</div>'
-              + '<div>'
-                + '<label class="label">Mostrar</label>'
-                + '<select id="in-filtro" class="input js-select">'
-                  + '<option value="todos">Todos los productos</option>'
-                  + '<option value="bajo">Solo bajo stock mínimo</option>'
-                  + '<option value="sin">Solo sin stock</option>'
-                + '</select>'
-              + '</div>'
-            + '</div>'
-            + '<style>@media (min-width: 768px) { .inv-grid { grid-template-columns: 2fr 1fr !important; } }</style>'
-          + '</div>'
-
           + '<div class="card" style="padding: 0; margin-bottom: 1.5rem;">'
             + '<div id="in-tabla">' + this._tablaHTML() + '</div>'
           + '</div>'
 
-          + '<h2 class="section-title"><i data-lucide="history" class="w-5 h-5"></i> Últimos movimientos</h2>'
+          + '<h2 class="section-title"><i data-lucide="history" class="w-5 h-5"></i> Movimientos</h2>'
           + '<div class="card" style="padding: 0;">' + this._movimientosHTML() + '</div>'
         + '</div>'
         + (this.ajustando ? this._ajusteHTML() : '')
         + (this.historialDe ? this._historialHTML() : '');
 
-      var sel = this.container.querySelector('#in-filtro');
-      if (sel) sel.value = this.filtro;
-
       App.refreshIcons();
     }
 
     _kpisHTML() {
-      var conStock = App.DB.all('productos').filter(function (p) { return p.controla_stock !== false; });
+      var conStock = this._conStock();
       var bajo = conStock.filter(function (p) { var s = Number(p.stock || 0); return s > 0 && s <= Number(p.stock_min || 0); });
       var sin = conStock.filter(function (p) { return Number(p.stock || 0) <= 0; });
 
@@ -113,21 +79,17 @@ var App = window.App || (window.App = {});
     }
 
     _tablaHTML() {
-      var lista = this._filtrados();
+      var lista = this._conStock();
       if (lista.length === 0) {
-        var sinProductos = App.DB.all('productos').length === 0;
         return '<div style="padding: 3rem 1.5rem; text-align: center; color: rgb(148 163 184);">'
-          + '<i data-lucide="' + (sinProductos ? 'package-plus' : 'package-search') + '" class="w-10 h-10" style="margin: 0 auto 0.75rem; display: block;"></i>'
-          + (sinProductos
-            ? '<div style="font-weight: 600; color: rgb(71 85 105);">Todavía no hay productos que controlen stock</div>'
-              + '<p class="text-xs" style="margin-top: 0.5rem;">Crea productos desde <strong>Productos</strong> y aparecerán aquí.</p>'
-            : 'No hay productos que coincidan con el filtro.')
+          + '<i data-lucide="package-plus" class="w-10 h-10" style="margin: 0 auto 0.75rem; display: block;"></i>'
+          + '<div style="font-weight: 600; color: rgb(71 85 105);">Todavía no hay productos que controlen stock</div>'
+          + '<p class="text-xs" style="margin-top: 0.5rem;">Crea productos desde <strong>Productos</strong> y aparecerán aquí.</p>'
           + '</div>';
       }
 
       return ''
-        + '<div class="table-wrap">'
-          + '<table class="table-std">'
+        + '<table class="table-std js-dt" data-dt-key="inventario" data-dt-buscar="Buscar producto, código o categoría...">'
             + '<thead><tr>'
               + '<th>Producto</th>'
               + '<th style="text-align: right;">Stock</th>'
@@ -152,10 +114,10 @@ var App = window.App || (window.App = {});
                     + '<span class="font-mono">' + App.escapeHtml(p.codigo) + '</span> · ' + App.escapeHtml(p.categoria || '—')
                   + '</div>'
                 + '</td>'
-                + '<td class="text-right"><span class="badge" style="' + estilo + '">' + App.fmtNumber(stock, 0) + '</span></td>'
-                + '<td class="text-right text-xs" style="color: rgb(100 116 139);">' + App.fmtNumber(min, 0) + '</td>'
-                + '<td class="text-right text-xs" style="color: rgb(100 116 139);">' + App.fmtMoney(p.costo_unitario) + '</td>'
-                + '<td class="text-right font-semibold">' + App.fmtMoney(stock * Number(p.costo_unitario || 0)) + '</td>'
+                + '<td class="text-right" data-order="' + stock + '"><span class="badge" style="' + estilo + '">' + App.fmtNumber(stock, 0) + '</span></td>'
+                + '<td class="text-right text-xs" style="color: rgb(100 116 139);" data-order="' + min + '">' + App.fmtNumber(min, 0) + '</td>'
+                + '<td class="text-right text-xs" style="color: rgb(100 116 139);" data-order="' + Number(p.costo_unitario || 0) + '">' + App.fmtMoney(p.costo_unitario) + '</td>'
+                + '<td class="text-right font-semibold" data-order="' + (stock * Number(p.costo_unitario || 0)) + '">' + App.fmtMoney(stock * Number(p.costo_unitario || 0)) + '</td>'
                 + '<td>'
                   + '<div style="display: flex; gap: 0.25rem; justify-content: flex-end;">'
                     + '<button data-ajustar="' + p.id + '" title="Registrar movimiento" style="padding: 0.3rem; border-radius: 0.375rem; color: rgb(37 99 235); background: transparent; border: none; cursor: pointer;">'
@@ -167,22 +129,22 @@ var App = window.App || (window.App = {});
                 + '</tr>';
             }).join('')
             + '</tbody>'
-          + '</table>'
-        + '</div>';
+        + '</table>';
     }
 
     _movimientosHTML() {
+      // Antes se recortaba a los últimos 40; ahora el historial completo va
+      // paginado, así que no hace falta esconder nada.
       var movs = App.DB.all('inventario').slice().sort(function (a, b) {
         return String(b.fecha).localeCompare(String(a.fecha)) || b.id - a.id;
-      }).slice(0, 40);
+      });
 
       if (movs.length === 0) {
         return '<div style="padding: 2.5rem 1rem; text-align: center; color: rgb(148 163 184);">Sin movimientos registrados.</div>';
       }
 
       return ''
-        + '<div class="table-wrap">'
-          + '<table class="table-std">'
+        + '<table class="table-std js-dt" data-dt-key="inv-movimientos" data-dt-buscar="Buscar por producto, tipo o motivo...">'
             + '<thead><tr>'
               + '<th>Fecha</th><th>Tipo</th><th>Producto</th>'
               + '<th style="text-align: right;">Cantidad</th><th>Motivo</th>'
@@ -198,15 +160,14 @@ var App = window.App || (window.App = {});
                   + '<div style="font-size: 0.8125rem;">' + App.escapeHtml(m.descripcion) + '</div>'
                   + '<div class="text-xs font-mono" style="color: rgb(148 163 184);">' + App.escapeHtml(m.codigo) + '</div>'
                 + '</td>'
-                + '<td class="text-right font-semibold" style="color: ' + (cant >= 0 ? 'rgb(22 163 74)' : 'rgb(220 38 38)') + ';">'
+                + '<td class="text-right font-semibold" style="color: ' + (cant >= 0 ? 'rgb(22 163 74)' : 'rgb(220 38 38)') + ';" data-order="' + cant + '">'
                   + (cant >= 0 ? '+' : '') + App.fmtNumber(cant, 0)
                 + '</td>'
                 + '<td class="text-xs" style="color: rgb(100 116 139);">' + App.escapeHtml(m.motivo || '—') + '</td>'
                 + '</tr>';
             }).join('')
             + '</tbody>'
-          + '</table>'
-        + '</div>';
+        + '</table>';
     }
 
     _ajusteHTML() {
@@ -286,16 +247,6 @@ var App = window.App || (window.App = {});
     _bind() {
       var self = this;
 
-      this.container.querySelector('#in-buscar').addEventListener('input', function (e) {
-        self.q = e.target.value;
-        self._refrescarTabla();
-      });
-
-      this.container.querySelector('#in-filtro').addEventListener('change', function (e) {
-        self.filtro = e.target.value;
-        self._refrescarTabla();
-      });
-
       this._bindTabla();
 
       if (this.ajustando) {
@@ -316,26 +267,18 @@ var App = window.App || (window.App = {});
       }
     }
 
+    /** Delegado en #in-tabla: con paginación las demás filas no están en el DOM. */
     _bindTabla() {
       var self = this;
-      this.container.querySelectorAll('[data-ajustar]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          self.ajustando = App.DB.find('productos', btn.dataset.ajustar);
-          self._rerender();
-        });
+      var raiz = this.container.querySelector('#in-tabla');
+      App.delegarClick(raiz, '[data-ajustar]', function (btn) {
+        self.ajustando = App.DB.find('productos', btn.dataset.ajustar);
+        self._rerender();
       });
-      this.container.querySelectorAll('[data-historial]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          self.historialDe = App.DB.find('productos', btn.dataset.historial);
-          self._rerender();
-        });
+      App.delegarClick(raiz, '[data-historial]', function (btn) {
+        self.historialDe = App.DB.find('productos', btn.dataset.historial);
+        self._rerender();
       });
-    }
-
-    _refrescarTabla() {
-      this.container.querySelector('#in-tabla').innerHTML = this._tablaHTML();
-      App.refreshIcons();
-      this._bindTabla();
     }
 
     _rerender() {

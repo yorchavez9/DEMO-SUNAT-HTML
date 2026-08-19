@@ -150,4 +150,18 @@ var App = window.App || (window.App = {});
     var c = App.getConfig();
     return Boolean(c.api_key && c.api_secret);
   };
+
+  /**
+   * Borra la cuenta y las credenciales guardadas en este navegador: usuarios,
+   * sesión abierta y configuración de la API. Tras esto el sistema vuelve al
+   * registro del primer usuario.
+   *
+   * Los datos del negocio (productos, clientes, ...) los borra App.DB.borrarDatos:
+   * viven bajo otro prefijo y son otra decisión.
+   */
+  App.borrarCuenta = function () {
+    [STORAGE_KEY, AUTH_KEY, USERS_KEY].forEach(function (k) {
+      localStorage.removeItem(k);
+    });
+  };
 })();

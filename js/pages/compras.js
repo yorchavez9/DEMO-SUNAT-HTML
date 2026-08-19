@@ -78,8 +78,7 @@ var App = window.App || (window.App = {});
             + '<i data-lucide="shopping-cart" class="w-10 h-10" style="margin: 0 auto 0.75rem; display: block;"></i>'
             + 'Todavía no hay compras registradas.'
           + '</div>'
-        : '<div class="table-wrap">'
-            + '<table class="table-std">'
+        : '<table class="table-std js-dt" data-dt-key="compras" data-dt-order="0:desc" data-dt-buscar="Buscar por proveedor, documento o fecha...">'
               + '<thead><tr>'
                 + '<th>Fecha</th><th>Documento</th><th>Proveedor</th>'
                 + '<th style="text-align: right;">Ítems</th>'
@@ -98,8 +97,8 @@ var App = window.App || (window.App = {});
                     + '<div style="font-weight: 600;">' + App.escapeHtml(c.proveedor) + '</div>'
                     + '<div class="text-xs font-mono" style="color: rgb(148 163 184);">' + App.escapeHtml(c.proveedor_doc || '') + '</div>'
                   + '</td>'
-                  + '<td class="text-right text-xs">' + c.items.length + '</td>'
-                  + '<td class="text-right font-semibold">' + App.fmtMoney(c.total) + '</td>'
+                  + '<td class="text-right text-xs" data-order="' + c.items.length + '">' + c.items.length + '</td>'
+                  + '<td class="text-right font-semibold" data-order="' + Number(c.total || 0) + '">' + App.fmtMoney(c.total) + '</td>'
                   + '<td>'
                     + '<div style="display: flex; gap: 0.25rem; justify-content: flex-end;">'
                       + '<button data-ver="' + c.id + '" title="Ver detalle" style="padding: 0.3rem; border-radius: 0.375rem; color: rgb(37 99 235); background: transparent; border: none; cursor: pointer;">'
@@ -111,8 +110,7 @@ var App = window.App || (window.App = {});
                   + '</tr>';
               }).join('')
               + '</tbody>'
-            + '</table>'
-          + '</div>';
+          + '</table>';
 
       return ''
         + '<div>'
@@ -129,7 +127,7 @@ var App = window.App || (window.App = {});
               + '<div style="font-size: 1.25rem; font-weight: 800;">' + App.fmtMoney(totalMes) + '</div>'
             + '</div>'
           + '</div>'
-          + '<div class="card" style="padding: 0;">' + tabla + '</div>'
+          + '<div class="card" style="padding: 0;" id="cp-tabla">' + tabla + '</div>'
         + '</div>';
     }
 
@@ -308,17 +306,16 @@ var App = window.App || (window.App = {});
           self._rerender();
         });
 
-        this.container.querySelectorAll('[data-ver]').forEach(function (btn) {
-          btn.addEventListener('click', function () {
-            self.viendo = App.DB.find('compras', btn.dataset.ver);
-            self._rerender();
-          });
+        // Delegado en #cp-tabla: la tabla está paginada y las filas de las
+        // páginas siguientes no están en el DOM.
+        var raiz = this.container.querySelector('#cp-tabla');
+        App.delegarClick(raiz, '[data-ver]', function (btn) {
+          self.viendo = App.DB.find('compras', btn.dataset.ver);
+          self._rerender();
         });
-        this.container.querySelectorAll('[data-borrar]').forEach(function (btn) {
-          btn.addEventListener('click', function () {
-            self.eliminando = App.DB.find('compras', btn.dataset.borrar);
-            self._rerender();
-          });
+        App.delegarClick(raiz, '[data-borrar]', function (btn) {
+          self.eliminando = App.DB.find('compras', btn.dataset.borrar);
+          self._rerender();
         });
       } else {
         this.container.querySelector('#cp-cancelar').addEventListener('click', function () {

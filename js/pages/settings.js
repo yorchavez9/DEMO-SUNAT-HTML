@@ -6,7 +6,7 @@ var App = window.App || (window.App = {});
  *   2. Mi empresa — datos reales traídos de GET /empresa, editables con
  *      PUT /empresa, más logo (POST /empresa/logo) y certificado
  *      (POST /empresa/certificado).
- *   3. Sistema   — datos locales del demo: catálogo de ejemplo y respaldo.
+ *   3. Sistema   — rubro (identidad visual), respaldo y borrado de datos.
  */
 (function () {
   // Paleta sobria: superficies neutras y el primario solo donde es la marca
@@ -79,6 +79,7 @@ var App = window.App || (window.App = {});
       // Sistema
       this.datosMsg = null;
       this.negocioMsg = null;
+      this.borrarMsg = null;
     }
 
     render(container, router) {
@@ -505,54 +506,84 @@ var App = window.App || (window.App = {});
       var actual = App.DB.rubro();
       var rubros = App.DB.rubros();
 
-      return '<div class="cfg-duo">'
-        + '<div class="card">'
-          + '<h2 class="section-title"><i data-lucide="layout-grid" class="w-5 h-5"></i> Catálogo de ejemplo</h2>'
-          + '<p class="text-xs" style="color: rgb(71 85 105); line-height: 1.6; margin-bottom: 1rem;">'
-            + (actual
-              ? 'Ahora mismo estás usando el catálogo de <strong>' + App.escapeHtml(actual.nombre) + '</strong>.'
-              : 'El sistema arranca vacío. Si quieres partir de un catálogo de ejemplo, elige un rubro y cárgalo; luego lo editas todo desde Productos, Clientes y Proveedores.')
-          + '</p>'
-          + '<div class="cfg-acciones">'
-            + '<select id="e-rubro" class="input js-select" data-search="true" data-placeholder="Elige un rubro" data-search-placeholder="Buscar rubro..." style="flex: 1; min-width: 14rem;">'
-              + '<option value="">Elige un rubro</option>'
-              + rubros.map(function (r) {
-                return '<option value="' + r.id + '"' + (actual && r.id === actual.id ? ' selected' : '') + '>' + App.escapeHtml(r.nombre) + '</option>';
-              }).join('')
-            + '</select>'
-            + '<button id="e-cargar-rubro" class="btn-secondary"><i data-lucide="download" class="w-4 h-4"></i> Cargar catálogo</button>'
+      var totalRegistros = App.DB.COLECCIONES.reduce(function (s, col) {
+        return s + App.DB.all(col).length;
+      }, 0);
+
+      return ''
+        + '<div class="cfg-duo">'
+          + '<div class="card">'
+            + '<h2 class="section-title"><i data-lucide="layout-grid" class="w-5 h-5"></i> Rubro del negocio</h2>'
+            + '<p class="text-xs" style="color: rgb(71 85 105); line-height: 1.6; margin-bottom: 1rem;">'
+              + 'Define el nombre, el icono y el color con los que se presenta el sistema. '
+              + 'No añade ni borra ningún dato.'
+            + '</p>'
+            + '<div class="cfg-acciones">'
+              + '<select id="e-rubro" class="input js-select" data-search="true" data-placeholder="Elige un rubro" data-search-placeholder="Buscar rubro..." style="flex: 1; min-width: 14rem;">'
+                + '<option value="">Elige un rubro</option>'
+                + rubros.map(function (r) {
+                  return '<option value="' + r.id + '"' + (actual && r.id === actual.id ? ' selected' : '') + '>' + App.escapeHtml(r.nombre) + '</option>';
+                }).join('')
+              + '</select>'
+              + '<button id="e-cargar-rubro" class="btn-secondary"><i data-lucide="check" class="w-4 h-4"></i> Aplicar</button>'
+            + '</div>'
+            + this._msgHTML(this.negocioMsg)
           + '</div>'
-          + (actual
-            ? '<p class="text-xs" style="color: ' + TEXTO2 + '; margin-top: 0.5rem; display: flex; align-items: flex-start; gap: 0.375rem;">'
-              + '<i data-lucide="alert-triangle" class="w-3 h-3" style="color: ' + ERROR + '; flex-shrink: 0; margin-top: 0.15rem;"></i>'
-              + 'Cargar otro rubro reemplaza productos, clientes, proveedores, compras e inventario. Exporta antes si quieres conservarlos.</p>'
-            : '')
-          + this._msgHTML(this.negocioMsg)
+
+          + '<div class="card">'
+            + '<h2 class="section-title"><i data-lucide="database" class="w-5 h-5"></i> Respaldo de datos</h2>'
+            + '<p class="text-xs" style="color: rgb(71 85 105); line-height: 1.6;">'
+              + 'Todo vive en este navegador. Exporta un JSON para respaldarlo o llevarlo a otro equipo; '
+              + 'es lo único que permite recuperar los datos si se borran.'
+            + '</p>'
+            + '<div class="cfg-conteos" style="margin-top: 1rem;">'
+              + App.DB.COLECCIONES.map(function (col) {
+                return '<div style="padding: 0.5rem 0.75rem; background: rgb(248 250 252); border-radius: 0.625rem;">'
+                  + '<div style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: rgb(148 163 184);">' + col + '</div>'
+                  + '<div style="font-weight: 800; font-size: 1.125rem;">' + App.DB.all(col).length + '</div>'
+                  + '</div>';
+              }).join('')
+            + '</div>'
+            + this._msgHTML(this.datosMsg)
+            + '<div class="cfg-acciones" style="margin-top: 1rem;">'
+              + '<button id="s-exportar" class="btn-secondary"><i data-lucide="download" class="w-4 h-4"></i> Exportar JSON</button>'
+              + '<button id="s-importar" class="btn-secondary"><i data-lucide="upload" class="w-4 h-4"></i> Importar JSON</button>'
+              + '<input id="s-archivo" type="file" accept="application/json,.json" style="display: none;" />'
+            + '</div>'
+          + '</div>'
         + '</div>'
 
-        + '<div class="card">'
-          + '<h2 class="section-title"><i data-lucide="database" class="w-5 h-5"></i> Respaldo de datos</h2>'
+        // Va aparte y al final: son las dos acciones sin vuelta atrás
+        + '<div class="card" style="margin-top: 1rem;">'
+          + '<h2 class="section-title" style="color: ' + ERROR + ';"><i data-lucide="trash-2" class="w-5 h-5"></i> Borrar datos</h2>'
           + '<p class="text-xs" style="color: rgb(71 85 105); line-height: 1.6;">'
-            + 'Productos, clientes, proveedores, compras e inventario viven en este navegador. '
-            + 'Exporta un JSON para respaldarlos o llevarlos a otro equipo.'
+            + 'No se puede deshacer. Exporta antes si quieres conservar algo.'
           + '</p>'
-          + '<div class="cfg-conteos" style="margin-top: 1rem;">'
-            + App.DB.COLECCIONES.map(function (col) {
-              return '<div style="padding: 0.5rem 0.75rem; background: rgb(248 250 252); border-radius: 0.625rem;">'
-                + '<div style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: rgb(148 163 184);">' + col + '</div>'
-                + '<div style="font-weight: 800; font-size: 1.125rem;">' + App.DB.all(col).length + '</div>'
-                + '</div>';
-            }).join('')
+          + this._msgHTML(this.borrarMsg)
+          + '<div class="cfg-duo" style="margin-top: 1rem;">'
+            + '<div style="padding: 0.875rem; background: rgb(248 250 252); border-radius: 0.75rem;">'
+              + '<div style="font-size: 0.875rem; font-weight: 700; color: rgb(15 23 42);">Vaciar el negocio</div>'
+              + '<p class="text-xs" style="color: rgb(100 116 139); line-height: 1.6; margin: 0.375rem 0 0.75rem;">'
+                + 'Borra los <strong>' + App.fmtNumber(totalRegistros, 0) + '</strong> registros de productos, categorías, clientes, '
+                + 'proveedores, compras e inventario, y los datos de la empresa. '
+                + 'Conserva tu usuario y las credenciales SUNAT.'
+              + '</p>'
+              + '<button id="s-borrar-datos" class="btn-secondary" style="color: ' + ERROR + ';">'
+                + '<i data-lucide="eraser" class="w-4 h-4"></i> Borrar los datos'
+              + '</button>'
+            + '</div>'
+            + '<div style="padding: 0.875rem; background: rgb(248 250 252); border-radius: 0.75rem;">'
+              + '<div style="font-size: 0.875rem; font-weight: 700; color: rgb(15 23 42);">Dejarlo como recién instalado</div>'
+              + '<p class="text-xs" style="color: rgb(100 116 139); line-height: 1.6; margin: 0.375rem 0 0.75rem;">'
+                + 'Lo anterior y además tu <strong>usuario</strong>, la sesión y las <strong>credenciales SUNAT</strong>. '
+                + 'El sistema vuelve al registro del primer usuario.'
+              + '</p>'
+              + '<button id="s-borrar-todo" class="btn-danger">'
+                + '<i data-lucide="rotate-ccw" class="w-4 h-4"></i> Restablecer todo'
+              + '</button>'
+            + '</div>'
           + '</div>'
-          + this._msgHTML(this.datosMsg)
-          + '<div class="cfg-acciones" style="margin-top: 1rem;">'
-            + '<button id="s-exportar" class="btn-secondary"><i data-lucide="download" class="w-4 h-4"></i> Exportar JSON</button>'
-            + '<button id="s-importar" class="btn-secondary"><i data-lucide="upload" class="w-4 h-4"></i> Importar JSON</button>'
-            + '<button id="s-restaurar" class="btn-secondary" style="color: ' + ERROR + ';"><i data-lucide="rotate-ccw" class="w-4 h-4"></i> Restaurar ejemplo</button>'
-            + '<input id="s-archivo" type="file" accept="application/json,.json" style="display: none;" />'
-          + '</div>'
-        + '</div>'
-      + '</div>';
+        + '</div>';
     }
 
     // ═══ Eventos ══════════════════════════════════════════════
@@ -661,12 +692,8 @@ var App = window.App || (window.App = {});
         archivo.value = '';
       });
 
-      c.querySelector('#s-restaurar').addEventListener('click', function () {
-        if (!window.confirm('Se perderán los productos, clientes, compras e inventario que hayas creado y volverán los datos de ejemplo del rubro. ¿Continuar?')) return;
-        App.DB.restaurarSemilla()
-          .then(function () { self._msg('datosMsg', 'ok', 'Datos de ejemplo restaurados.'); })
-          .catch(function (e) { self._msg('datosMsg', 'error', e.message); });
-      });
+      c.querySelector('#s-borrar-datos').addEventListener('click', function () { self._borrarDatos(); });
+      c.querySelector('#s-borrar-todo').addEventListener('click', function () { self._restablecerTodo(); });
     }
 
     _msg(campo, tipo, texto) {
@@ -857,28 +884,66 @@ var App = window.App || (window.App = {});
     }
 
     // ═══ Acciones: sistema ════════════════════════════════════
+    /** Solo cambia la identidad visual: no toca ningún dato. */
     _cargarRubro() {
       var self = this;
       var nuevo = this.container.querySelector('#e-rubro').value;
-      var actual = App.DB.rubro();
 
       if (!nuevo) {
         this._msg('negocioMsg', 'error', 'Elige un rubro de la lista.');
         return;
       }
-      if (actual && nuevo === actual.id) {
-        this._msg('negocioMsg', 'error', 'Ya estás usando ese catálogo. Usa "Restaurar ejemplo" para recargarlo.');
-        return;
-      }
 
-      var aviso = actual
-        ? 'Se reemplazarán productos, clientes, proveedores, compras e inventario por los del nuevo rubro. ¿Continuar?'
-        : 'Se cargará el catálogo de ejemplo de ese rubro. ¿Continuar?';
-      if (!window.confirm(aviso)) return;
+      App.DB.elegirRubro(nuevo)
+        .then(function () {
+          if (App.refrescarMarca) App.refrescarMarca();
+          App.aplicarTitulo();
+          self._msg('negocioMsg', 'ok', 'Rubro aplicado.');
+        })
+        .catch(function (e) { self._msg('negocioMsg', 'error', 'No se pudo aplicar: ' + e.message); });
+    }
 
-      App.DB.aplicarRubro(nuevo)
-        .then(function () { self._msg('negocioMsg', 'ok', 'Catálogo cargado.'); })
-        .catch(function (e) { self._msg('negocioMsg', 'error', 'No se pudo cargar: ' + e.message); });
+    _borrarDatos() {
+      var total = App.DB.COLECCIONES.reduce(function (s, col) {
+        return s + App.DB.all(col).length;
+      }, 0);
+
+      if (!window.confirm(
+        'Se borrarán ' + total + ' registros (productos, categorías, clientes, proveedores, '
+        + 'compras e inventario) y los datos de la empresa.\n\n'
+        + 'Esto NO se puede deshacer. ¿Continuar?'
+      )) return;
+
+      var borrado = App.DB.borrarDatos();
+      var detalle = Object.keys(borrado)
+        .filter(function (col) { return borrado[col] > 0; })
+        .map(function (col) { return borrado[col] + ' ' + col; })
+        .join(', ');
+
+      if (App.refrescarMarca) App.refrescarMarca();
+      App.aplicarTitulo();
+      this._msg('borrarMsg', 'ok', detalle
+        ? 'Sistema vaciado. Se borraron: ' + detalle + '.'
+        : 'No había nada que borrar.');
+    }
+
+    /**
+     * Deja el navegador como recién instalado. Al quitar el usuario la sesión
+     * deja de ser válida, así que se recarga la página: el arranque manda solo
+     * al registro del primer usuario.
+     */
+    _restablecerTodo() {
+      if (!window.confirm(
+        'Se borrará TODO en este navegador: los datos del negocio, tu usuario y '
+        + 'las credenciales SUNAT.\n\nTendrás que registrarte de nuevo. '
+        + 'Esto NO se puede deshacer. ¿Continuar?'
+      )) return;
+      if (!window.confirm('Última confirmación: ¿borrar todo y volver al registro inicial?')) return;
+
+      App.DB.borrarDatos();
+      App.borrarCuenta();
+      window.location.hash = '#/registro';
+      window.location.reload();
     }
   };
 })();

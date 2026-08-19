@@ -91,7 +91,9 @@ var App = window.App || (window.App = {});
           + '<div class="card" style="margin-bottom: 1rem;">'
             + '<div style="display: flex; flex-direction: column; gap: 0.75rem;" class="filter-row">'
               + '<div style="flex: 1;">'
-                + '<label class="label">Buscar</label>'
+                // Este buscador consulta al servidor (trae otros documentos);
+                // el de la tabla filtra lo ya cargado.
+                + '<label class="label">Consultar al servidor</label>'
                 + '<input id="dl-buscar" class="input" placeholder="Serie, correlativo, cliente..." value="' + App.escapeHtml(f.buscar) + '" />'
               + '</div>'
               + '<div>'
@@ -113,34 +115,35 @@ var App = window.App || (window.App = {});
             + '@media (max-width: 1023px) { .actions-desktop { display: none !important; } .actions-mobile { display: block !important; } }'
             + '</style>'
           + '</div>'
-          + '<div class="card" id="dl-body">' + this._bodyHTML() + '</div>'
+          + '<div class="card" id="dl-body" style="padding: 0;">' + this._bodyHTML() + '</div>'
         + '</div>';
 
       App.refreshIcons();
     }
 
     _bodyHTML() {
+      // La tarjeta va sin padding porque la tabla lo pone por dentro; los
+      // estados de carga y error lo llevan aquí.
       if (this.loading) {
-        return '<div style="text-align: center; padding: 2rem 0; color: rgb(148 163 184); display: flex; align-items: center; justify-content: center; gap: 0.5rem;">'
+        return '<div style="text-align: center; padding: 3rem 1.25rem; color: rgb(148 163 184); display: flex; align-items: center; justify-content: center; gap: 0.5rem;">'
           + '<i data-lucide="loader-2" class="w-5 h-5 icon-spin"></i> Cargando...</div>';
       }
       if (this.error) {
-        return '<div style="padding: 1rem; background: rgb(254 242 242); color: rgb(185 28 28); border-radius: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">'
+        return '<div style="margin: 1.25rem; padding: 1rem; background: rgb(254 242 242); color: rgb(185 28 28); border-radius: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">'
           + '<i data-lucide="x-circle" class="w-5 h-5"></i> ' + App.escapeHtml(this.error) + '</div>';
       }
       if (this.docs.length === 0) {
-        return '<div style="text-align: center; padding: 2rem 0; color: rgb(148 163 184);">Sin documentos</div>';
+        return '<div style="text-align: center; padding: 3rem 1.25rem; color: rgb(148 163 184);">Sin documentos</div>';
       }
 
       var self = this;
       var rows = this.docs.map(function (d) { return self._rowHTML(d); }).join('');
-      return '<div class="table-wrap">'
-        + '<table class="table-std">'
+      return '<table class="table-std js-dt" data-dt-key="doc-' + this.tipo + '" data-dt-order="1:desc"'
+          + ' data-dt-buscar="Buscar en los resultados...">'
           + '<thead><tr><th>Número</th><th>Fecha</th><th>Cliente</th>'
-          + '<th style="text-align: right;">Total</th><th>Estado</th><th>Acciones</th></tr></thead>'
+          + '<th style="text-align: right;">Total</th><th>Estado</th><th data-nosort>Acciones</th></tr></thead>'
           + '<tbody>' + rows + '</tbody>'
-        + '</table>'
-        + '</div>';
+        + '</table>';
     }
 
     _rowHTML(d) {
@@ -204,7 +207,7 @@ var App = window.App || (window.App = {});
         + '<td class="font-mono font-semibold" style="color:rgb(15 23 42);">' + App.escapeHtml(numero) + '</td>'
         + '<td style="color:rgb(71 85 105);">' + App.escapeHtml((d.fecha_emision || '').slice(0, 10)) + '</td>'
         + '<td style="max-width:20rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + App.escapeHtml(clienteNombre) + '</td>'
-        + '<td style="text-align:right;font-weight:700;color:rgb(15 23 42);">' + App.fmtMoney(total, d.tipo_moneda) + '</td>'
+        + '<td style="text-align:right;font-weight:700;color:rgb(15 23 42);" data-order="' + Number(total || 0) + '">' + App.fmtMoney(total, d.tipo_moneda) + '</td>'
         + '<td>' + App.estadoBadgeHTML(estado) + '</td>'
         + '<td style="position:relative;">'
           + '<div class="actions-desktop" style="display:flex;align-items:center;gap:0.25rem;flex-wrap:wrap;">' + inlineBtns + '</div>'
@@ -244,8 +247,9 @@ var App = window.App || (window.App = {});
     }
 
     _bindDropdowns() {
-      this.container.querySelectorAll('[data-dd-toggle]').forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
+      // Delegado: con la tabla paginada, las filas de las páginas siguientes
+      // no están en el DOM y no se les puede enganchar un listener directo.
+      App.delegarClick(this.container.querySelector('#dl-body'), '[data-dd-toggle]', function (btn, e) {
           e.stopPropagation();
           var menu = document.getElementById(btn.dataset.ddToggle);
           if (!menu) return;
@@ -266,30 +270,25 @@ var App = window.App || (window.App = {});
           menu.style.top = (abrirArriba ? r.top - alto - 4 : r.bottom + 4) + 'px';
           menu.style.left = Math.max(8, Math.min(r.right - ancho, window.innerWidth - ancho - 8)) + 'px';
           menu.style.visibility = '';
-        });
       });
     }
 
     _bindDownloads() {
       var self = this;
-      this.container.querySelectorAll('[data-download]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var kind = btn.dataset.download;
-          var id = parseInt(btn.dataset.id, 10);
-          var doc = self.docs.find(function (d) { return d.id === id; });
-          if (doc) self._descargar(doc, kind);
-        });
+      App.delegarClick(this.container.querySelector('#dl-body'), '[data-download]', function (btn) {
+        var kind = btn.dataset.download;
+        var id = parseInt(btn.dataset.id, 10);
+        var doc = self.docs.find(function (d) { return d.id === id; });
+        if (doc) self._descargar(doc, kind);
       });
     }
 
     _bindAnular() {
       var self = this;
-      this.container.querySelectorAll('[data-anular]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var id = parseInt(btn.dataset.anular, 10);
-          var doc = self.docs.find(function (d) { return d.id === id; });
-          if (doc) self._openAnularModal(doc);
-        });
+      App.delegarClick(this.container.querySelector('#dl-body'), '[data-anular]', function (btn) {
+        var id = parseInt(btn.dataset.anular, 10);
+        var doc = self.docs.find(function (d) { return d.id === id; });
+        if (doc) self._openAnularModal(doc);
       });
     }
 
@@ -390,13 +389,11 @@ var App = window.App || (window.App = {});
 
     _bindNota() {
       var self = this;
-      this.container.querySelectorAll('[data-nota]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var id = parseInt(btn.dataset.nota, 10);
-          var tipoNota = btn.dataset.notaTipo;
-          var doc = self.docs.find(function (d) { return d.id === id; });
-          if (doc) self._openNotaModal(doc, tipoNota);
-        });
+      App.delegarClick(this.container.querySelector('#dl-body'), '[data-nota]', function (btn) {
+        var id = parseInt(btn.dataset.nota, 10);
+        var tipoNota = btn.dataset.notaTipo;
+        var doc = self.docs.find(function (d) { return d.id === id; });
+        if (doc) self._openNotaModal(doc, tipoNota);
       });
     }
 

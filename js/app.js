@@ -18,6 +18,7 @@
     { path: '/anulaciones',        handler: function () { return new App.Anulaciones(); } },
     { path: '/documentos/:tipo',   handler: function (params) { return new App.DocumentList(params.tipo); } },
     { path: '/productos',          handler: function () { return new App.Productos(); } },
+    { path: '/categorias',         handler: function () { return new App.Categorias(); } },
     { path: '/clientes',           handler: function () { return new App.Contactos('clientes'); } },
     { path: '/proveedores',        handler: function () { return new App.Contactos('proveedores'); } },
     { path: '/compras',            handler: function () { return new App.Compras(); } },

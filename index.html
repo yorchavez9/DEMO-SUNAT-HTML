@@ -30,6 +30,9 @@
 
     <link rel="stylesheet" href="./css/styles.css" />
     <link rel="stylesheet" href="./css/components/select.css" />
+    <!-- Estilo completo de DataTables. No se carga la hoja de la librería:
+         sus bordes, degradados y `color: !important` no se podían pisar. -->
+    <link rel="stylesheet" href="./css/components/tabla.css" />
   </head>
   <body>
     <div id="root"></div>
@@ -41,6 +44,13 @@
          Generado con: node data/build-seed.js -->
     <script src="./data/seed.js"></script>
 
+    <!-- Librerías descargadas al proyecto (no CDN): así los listados siguen
+         funcionando al abrir el HTML con doble clic y sin internet.
+         DataTables es un plugin de jQuery, por eso van los dos. -->
+    <script src="./vendor/jquery/jquery-3.7.1.min.js"></script>
+    <script src="./vendor/datatables/dataTables.min.js"></script>
+    <script src="./vendor/datatables/i18n-es.js"></script>
+
     <script src="./js/utils.js"></script>
     <script src="./js/store.js"></script>
     <script src="./js/store/db.js"></script>
@@ -48,6 +58,7 @@
     <script src="./js/router.js"></script>
 
     <script src="./js/components/select.js"></script>
+    <script src="./js/components/tabla.js"></script>
     <script src="./js/components/sidebar.js"></script>
     <script src="./js/components/modal.js"></script>
     <script src="./js/components/clientSelector.js"></script>
@@ -61,6 +72,7 @@
     <script src="./js/pages/settings.js"></script>
     <script src="./js/pages/dashboard.js"></script>
     <script src="./js/pages/productos.js"></script>
+    <script src="./js/pages/categorias.js"></script>
     <script src="./js/pages/contactos.js"></script>
     <script src="./js/pages/compras.js"></script>
     <script src="./js/pages/inventario.js"></script>

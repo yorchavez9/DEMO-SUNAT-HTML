@@ -32,7 +32,7 @@ App.Summaries = class Summaries {
               + '<i data-lucide="refresh-ccw" class="w-4 h-4 ' + (this.loading ? 'icon-spin' : '') + '"></i> Actualizar'
             + '</button>'
           + '</div>'
-          + '<div id="s-body">' + this._bodyHTML() + '</div>'
+          + '<div id="s-body" class="dt-plano">' + this._bodyHTML() + '</div>'
         + '</div>'
       + '</div>';
 
@@ -55,16 +55,15 @@ App.Summaries = class Summaries {
 
     var self = this;
     var rows = this.items.map(function (s) { return self._rowHTML(s); }).join('');
-    return '<div class="table-wrap">'
-      + '<table class="table-std" style="min-width: 700px;">'
+    return '<table class="table-std js-dt" style="min-width: 700px;" data-dt-key="resumenes"'
+        + ' data-dt-order="2:desc" data-dt-buscar="Buscar por identificador, ticket o estado...">'
         + '<thead><tr>'
           + '<th>Identificador</th><th>Tipo</th><th>Fecha ref.</th>'
           + '<th style="text-align: right;">Docs</th><th>Estado SUNAT</th>'
           + '<th>Ticket</th><th></th>'
         + '</tr></thead>'
         + '<tbody>' + rows + '</tbody>'
-      + '</table>'
-      + '</div>';
+      + '</table>';
   }
 
   _rowHTML(s) {
@@ -102,13 +101,11 @@ App.Summaries = class Summaries {
     this._bindRefreshButtons();
   }
 
+  /** Delegado: con la tabla paginada, las demás filas no están en el DOM. */
   _bindRefreshButtons() {
     var self = this;
-    this.container.querySelectorAll('[data-refresh]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var id = parseInt(btn.dataset.refresh, 10);
-        self._refrescar(id);
-      });
+    App.delegarClick(this.container.querySelector('#s-body'), '[data-refresh]', function (btn) {
+      self._refrescar(parseInt(btn.dataset.refresh, 10));
     });
   }
 

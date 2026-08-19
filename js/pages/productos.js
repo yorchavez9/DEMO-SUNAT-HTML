@@ -17,8 +17,6 @@ var App = window.App || (window.App = {});
     constructor() {
       this.container = null;
       this.router = null;
-      this.q = '';
-      this.categoria = '';
       this.editando = null;   // producto en edición (o {} si es nuevo)
       this.eliminando = null; // producto pendiente de confirmar borrado
     }
@@ -30,48 +28,13 @@ var App = window.App || (window.App = {});
       this._bind();
     }
 
-    // ─── Datos ──────────────────────────────────────────────────
-    _filtrados() {
-      var q = this.q.toLowerCase().trim();
-      var cat = this.categoria;
-      return App.DB.all('productos').filter(function (p) {
-        if (cat && p.categoria !== cat) return false;
-        if (!q) return true;
-        return p.descripcion.toLowerCase().includes(q)
-          || p.codigo.toLowerCase().includes(q)
-          || (p.categoria || '').toLowerCase().includes(q)
-          || (p.cod_producto_sunat || '').includes(q);
-      });
-    }
-
     // ─── Render ─────────────────────────────────────────────────
     _renderHTML() {
-      var categorias = App.DB.categorias();
-
       this.container.innerHTML = ''
         + '<div>'
           + '<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">'
             + '<h1 class="page-title"><i data-lucide="package" class="w-7 h-7"></i> Productos</h1>'
             + '<button id="pr-nuevo" class="btn-primary"><i data-lucide="plus" class="w-4 h-4"></i> Nuevo producto</button>'
-          + '</div>'
-
-          + '<div class="card" style="margin-bottom: 1rem;">'
-            + '<div style="display: grid; grid-template-columns: 1fr; gap: 0.75rem;" class="filtros-grid">'
-              + '<div>'
-                + '<label class="label">Buscar</label>'
-                + '<input id="pr-buscar" class="input" placeholder="Descripción, código o categoría..." value="' + App.escapeHtml(this.q) + '" />'
-              + '</div>'
-              + '<div>'
-                + '<label class="label">Categoría</label>'
-                + '<select id="pr-categoria" class="input js-select" data-search="true" data-search-placeholder="Buscar categoría...">'
-                  + '<option value="">Todas</option>'
-                  + categorias.map(function (c) {
-                    return '<option value="' + App.escapeHtml(c) + '">' + App.escapeHtml(c) + '</option>';
-                  }).join('')
-                + '</select>'
-              + '</div>'
-            + '</div>'
-            + '<style>@media (min-width: 768px) { .filtros-grid { grid-template-columns: 2fr 1fr !important; } }</style>'
           + '</div>'
 
           + '<div class="card" style="padding: 0;">'
@@ -81,45 +44,33 @@ var App = window.App || (window.App = {});
         + (this.editando ? this._formHTML() : '')
         + (this.eliminando ? this._confirmHTML() : '');
 
-      var sel = this.container.querySelector('#pr-categoria');
-      if (sel) sel.value = this.categoria;
-
       App.refreshIcons();
     }
 
     _tablaHTML() {
-      var lista = this._filtrados();
+      var lista = App.DB.all('productos');
       if (lista.length === 0) {
-        // Catálogo vacío y búsqueda sin resultados son cosas distintas
-        var catalogoVacio = App.DB.all('productos').length === 0;
         return '<div style="padding: 3rem 1.5rem; text-align: center; color: rgb(148 163 184);">'
-          + '<i data-lucide="' + (catalogoVacio ? 'package-plus' : 'package-search') + '" class="w-10 h-10" style="margin: 0 auto 0.75rem; display: block;"></i>'
-          + (catalogoVacio
-            ? '<div style="font-weight: 600; color: rgb(71 85 105);">Todavía no tienes productos</div>'
-              + '<p class="text-xs" style="margin-top: 0.5rem; line-height: 1.6; max-width: 26rem; margin-left: auto; margin-right: auto;">'
-              + 'Crea el primero con <strong>Nuevo producto</strong>, o carga un catálogo de ejemplo de tu rubro desde '
-              + '<strong>Configuración → Mi negocio</strong>.'
-              + '</p>'
-            : 'No hay productos que coincidan con la búsqueda.')
+          + '<i data-lucide="package-plus" class="w-10 h-10" style="margin: 0 auto 0.75rem; display: block;"></i>'
+          + '<div style="font-weight: 600; color: rgb(71 85 105);">Todavía no tienes productos</div>'
+          + '<p class="text-xs" style="margin-top: 0.5rem; line-height: 1.6; max-width: 26rem; margin-left: auto; margin-right: auto;">'
+            + 'Crea el primero con <strong>Nuevo producto</strong>. Si ya tienes un respaldo, '
+            + 'impórtalo desde <strong>Configuración → Sistema</strong>.'
+          + '</p>'
           + '</div>';
       }
 
       return ''
-        + '<div style="padding: 0.75rem 1.25rem; border-bottom: 1px solid rgb(241 245 249); font-size: 0.8125rem; color: rgb(100 116 139);">'
-          + lista.length + ' de ' + App.DB.all('productos').length + ' productos'
-        + '</div>'
-        + '<div class="table-wrap">'
-          + '<table class="table-std">'
-            + '<thead><tr>'
-              + '<th>Código</th><th>Descripción</th><th>Und</th>'
-              + '<th style="text-align: right;">Precio</th>'
-              + '<th style="text-align: right;">Costo</th>'
-              + '<th style="text-align: right;">Stock</th>'
-              + '<th style="width: 5.5rem;"></th>'
-            + '</tr></thead>'
-            + '<tbody>' + lista.map(this._filaHTML).join('') + '</tbody>'
-          + '</table>'
-        + '</div>';
+        + '<table class="table-std js-dt" data-dt-key="productos" data-dt-buscar="Buscar producto, código o categoría...">'
+          + '<thead><tr>'
+            + '<th>Código</th><th>Descripción</th><th>Und</th>'
+            + '<th style="text-align: right;">Precio</th>'
+            + '<th style="text-align: right;">Costo</th>'
+            + '<th style="text-align: right;">Stock</th>'
+            + '<th style="width: 5.5rem;"></th>'
+          + '</tr></thead>'
+          + '<tbody>' + lista.map(this._filaHTML).join('') + '</tbody>'
+        + '</table>';
     }
 
     _filaHTML(p) {
@@ -143,6 +94,8 @@ var App = window.App || (window.App = {});
         ? '<span class="badge" style="background: rgb(238 242 255); color: rgb(55 48 163); margin-left: 0.375rem;">Afect. ' + App.escapeHtml(p.tip_afe_igv) + '</span>'
         : '';
 
+      // data-order lleva el valor crudo: si no, "S/ 1,200.00" se ordenaría
+      // como texto y 1,200 quedaría antes que 900
       return '<tr>'
         + '<td class="font-mono text-xs">' + App.escapeHtml(p.codigo) + '</td>'
         + '<td>'
@@ -150,9 +103,9 @@ var App = window.App || (window.App = {});
           + '<div class="text-xs" style="color: rgb(148 163 184);">' + App.escapeHtml(p.categoria || '—') + '</div>'
         + '</td>'
         + '<td class="text-xs">' + App.escapeHtml(unidadSym(p.unidad)) + '</td>'
-        + '<td class="text-right font-semibold">' + App.fmtMoney(p.precio_unitario) + '</td>'
-        + '<td class="text-right text-xs" style="color: rgb(100 116 139);">' + App.fmtMoney(p.costo_unitario) + '</td>'
-        + '<td class="text-right">' + stockHTML + '</td>'
+        + '<td class="text-right font-semibold" data-order="' + Number(p.precio_unitario || 0) + '">' + App.fmtMoney(p.precio_unitario) + '</td>'
+        + '<td class="text-right text-xs" style="color: rgb(100 116 139);" data-order="' + Number(p.costo_unitario || 0) + '">' + App.fmtMoney(p.costo_unitario) + '</td>'
+        + '<td class="text-right" data-order="' + (p.controla_stock === false ? -1 : Number(p.stock || 0)) + '">' + stockHTML + '</td>'
         + '<td>'
           + '<div style="display: flex; gap: 0.25rem; justify-content: flex-end;">'
             + '<button data-editar="' + p.id + '" title="Editar" style="padding: 0.3rem; border-radius: 0.375rem; color: rgb(37 99 235); background: transparent; border: none; cursor: pointer;">'
@@ -164,10 +117,26 @@ var App = window.App || (window.App = {});
         + '</tr>';
     }
 
+    /**
+     * Opciones del selector de categoría: las activas, más la que el producto
+     * ya tenga aunque esté inactiva o ya no exista en el catálogo. Sin esto,
+     * editar un producto de una categoría desactivada la borraría en silencio.
+     */
+    _opcionesCategoria(actual) {
+      var nombres = App.DB.categoriasActivas().map(function (c) { return c.nombre; });
+      if (actual && nombres.indexOf(actual) === -1) nombres.unshift(actual);
+
+      return '<option value="">— Sin categoría —</option>'
+        + nombres.map(function (n) {
+          return '<option value="' + App.escapeHtml(n) + '"' + (n === actual ? ' selected' : '') + '>'
+            + App.escapeHtml(n) + '</option>';
+        }).join('');
+    }
+
     _formHTML() {
       var p = this.editando;
       var esNuevo = !p.id;
-      var categorias = App.DB.categorias();
+      var hayCategorias = App.DB.all('categorias').length > 0;
 
       function campo(label, inputHTML, ayuda) {
         return '<div>'
@@ -188,8 +157,11 @@ var App = window.App || (window.App = {});
         + '</div>'
         + '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.875rem; margin-top: 0.875rem;">'
           + campo('Categoría',
-              '<input id="f-categoria" class="input" list="pr-cats" value="' + App.escapeHtml(p.categoria || '') + '" placeholder="Fierro y Acero" />'
-              + '<datalist id="pr-cats">' + categorias.map(function (c) { return '<option value="' + App.escapeHtml(c) + '"></option>'; }).join('') + '</datalist>')
+              '<select id="f-categoria" class="input js-select" data-search="true" data-clearable="true"'
+              + ' data-placeholder="Sin categoría" data-search-placeholder="Buscar categoría...">'
+              + this._opcionesCategoria(p.categoria || '')
+              + '</select>',
+              hayCategorias ? '' : 'Todavía no hay categorías. Créalas en <strong>Gestión → Categorías</strong>.')
           + campo('Unidad de medida',
               '<select id="f-unidad" class="input js-select" data-search="true" data-search-placeholder="Buscar unidad...">'
               + (App.SUNAT_UNITS || []).map(function (u) {
@@ -262,17 +234,6 @@ var App = window.App || (window.App = {});
         self._rerender();
       });
 
-      var buscar = this.container.querySelector('#pr-buscar');
-      buscar.addEventListener('input', function (e) {
-        self.q = e.target.value;
-        self._refrescarTabla();
-      });
-
-      this.container.querySelector('#pr-categoria').addEventListener('change', function (e) {
-        self.categoria = e.target.value;
-        self._refrescarTabla();
-      });
-
       this._bindTabla();
 
       if (this.editando) {
@@ -294,29 +255,27 @@ var App = window.App || (window.App = {});
       }
     }
 
+    /**
+     * Clic delegado: con la tabla paginada, las filas de la página 2 en
+     * adelante no están en el DOM, así que no se les puede enganchar un
+     * listener directo.
+     */
     _bindTabla() {
       var self = this;
-      this.container.querySelectorAll('[data-editar]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          self.editando = Object.assign({}, App.DB.find('productos', btn.dataset.editar));
-          self._rerender();
-        });
+      // Se delega en #pr-tabla, que se recrea en cada render: así los
+      // listeners mueren con él y no se acumulan.
+      var raiz = this.container.querySelector('#pr-tabla');
+      App.delegarClick(raiz, '[data-editar]', function (btn) {
+        self.editando = Object.assign({}, App.DB.find('productos', btn.dataset.editar));
+        self._rerender();
       });
-      this.container.querySelectorAll('[data-borrar]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          self.eliminando = App.DB.find('productos', btn.dataset.borrar);
-          self._rerender();
-        });
+      App.delegarClick(raiz, '[data-borrar]', function (btn) {
+        self.eliminando = App.DB.find('productos', btn.dataset.borrar);
+        self._rerender();
       });
     }
 
-    _refrescarTabla() {
-      this.container.querySelector('#pr-tabla').innerHTML = this._tablaHTML();
-      App.refreshIcons();
-      this._bindTabla();
-    }
-
-    /** Re-render completo conservando el foco del buscador. */
+    /** Re-render completo. */
     _rerender() {
       this._renderHTML();
       this._bind();

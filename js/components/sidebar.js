@@ -36,6 +36,7 @@ var App = window.App || (window.App = {});
       tipo: 'grupo', id: 'gestion', icon: 'layout-grid', label: 'Gestión',
       hijos: [
         { path: '/productos', icon: 'package', label: 'Productos' },
+        { path: '/categorias', icon: 'tags', label: 'Categorías' },
         { path: '/inventario', icon: 'warehouse', label: 'Inventario' },
         { path: '/compras', icon: 'shopping-cart', label: 'Compras' },
         { path: '/clientes', icon: 'users', label: 'Clientes' },

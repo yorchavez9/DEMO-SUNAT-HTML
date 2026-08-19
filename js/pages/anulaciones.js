@@ -46,7 +46,7 @@ App.Anulaciones = class Anulaciones {
               + '<i data-lucide="refresh-ccw" class="w-4 h-4 ' + (this.loading ? 'icon-spin' : '') + '"></i> Actualizar'
             + '</button>'
           + '</div>'
-          + '<div id="an-body">' + this._bodyHTML() + '</div>'
+          + '<div id="an-body" class="dt-plano">' + this._bodyHTML() + '</div>'
         + '</div>'
       + '</div>';
 
@@ -69,15 +69,15 @@ App.Anulaciones = class Anulaciones {
 
     var self = this;
     var rows = this.items.map(function (a) { return self._rowHTML(a); }).join('');
-    return '<div class="table-wrap">'
-      + '<table class="table-std" style="min-width: 800px;">'
+    return '<table class="table-std js-dt" style="min-width: 800px;" data-dt-key="anulaciones"'
+        + ' data-dt-order="1:desc" data-dt-buscar="Buscar por identificador, ticket o estado...">'
         + '<thead><tr>'
           + '<th>Identificador</th><th>Fecha</th>'
           + '<th style="text-align: right;">Docs</th><th>Estado SUNAT</th>'
           + '<th>Ticket</th><th></th>'
         + '</tr></thead>'
         + '<tbody>' + rows + '</tbody>'
-      + '</table></div>';
+      + '</table>';
   }
 
   _rowHTML(a) {
@@ -130,13 +130,15 @@ App.Anulaciones = class Anulaciones {
     this._bindTableButtons();
   }
 
+  /** Delegado: con la tabla paginada, las demás filas no están en el DOM. */
   _bindTableButtons() {
     var self = this;
-    this.container.querySelectorAll('[data-refresh]').forEach(function (btn) {
-      btn.addEventListener('click', function () { self._refrescar(parseInt(btn.dataset.refresh, 10)); });
+    var raiz = this.container.querySelector('#an-body');
+    App.delegarClick(raiz, '[data-refresh]', function (btn) {
+      self._refrescar(parseInt(btn.dataset.refresh, 10));
     });
-    this.container.querySelectorAll('[data-enviar]').forEach(function (btn) {
-      btn.addEventListener('click', function () { self._enviar(parseInt(btn.dataset.enviar, 10)); });
+    App.delegarClick(raiz, '[data-enviar]', function (btn) {
+      self._enviar(parseInt(btn.dataset.enviar, 10));
     });
   }
 

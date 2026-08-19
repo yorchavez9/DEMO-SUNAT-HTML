@@ -40,7 +40,6 @@ var App = window.App || (window.App = {});
       this.cfg = CONFIG[coleccion];
       this.container = null;
       this.router = null;
-      this.q = '';
       this.editando = null;
       this.eliminando = null;
       this.buscandoDoc = false;
@@ -54,16 +53,6 @@ var App = window.App || (window.App = {});
       this._bind();
     }
 
-    _filtrados() {
-      var q = this.q.toLowerCase().trim();
-      if (!q) return App.DB.all(this.col);
-      return App.DB.all(this.col).filter(function (c) {
-        return c.razon_social.toLowerCase().includes(q)
-          || c.num_doc.includes(q)
-          || (c.email || '').toLowerCase().includes(q);
-      });
-    }
-
     _renderHTML() {
       this.container.innerHTML = ''
         + '<div>'
@@ -73,11 +62,6 @@ var App = window.App || (window.App = {});
               + '<p class="text-xs" style="color: rgb(100 116 139); margin-bottom: 1.5rem;">' + this.cfg.ayuda + '</p>'
             + '</div>'
             + '<button id="ct-nuevo" class="btn-primary"><i data-lucide="plus" class="w-4 h-4"></i> Nuevo ' + this.cfg.singular + '</button>'
-          + '</div>'
-
-          + '<div class="card" style="margin-bottom: 1rem;">'
-            + '<label class="label">Buscar</label>'
-            + '<input id="ct-buscar" class="input" placeholder="Razón social, RUC/DNI o correo..." value="' + App.escapeHtml(this.q) + '" />'
           + '</div>'
 
           + '<div class="card" style="padding: 0;">'
@@ -91,21 +75,17 @@ var App = window.App || (window.App = {});
     }
 
     _tablaHTML() {
-      var lista = this._filtrados();
+      var lista = App.DB.all(this.col);
       if (lista.length === 0) {
-        var sinRegistros = App.DB.all(this.col).length === 0;
         return '<div style="padding: 3rem 1.5rem; text-align: center; color: rgb(148 163 184);">'
-          + '<i data-lucide="' + (sinRegistros ? 'user-plus' : 'user-x') + '" class="w-10 h-10" style="margin: 0 auto 0.75rem; display: block;"></i>'
-          + (sinRegistros
-            ? '<div style="font-weight: 600; color: rgb(71 85 105);">Todavía no tienes ' + this.col + '</div>'
-              + '<p class="text-xs" style="margin-top: 0.5rem;">Crea el primero con <strong>Nuevo ' + this.cfg.singular + '</strong>.</p>'
-            : 'No hay registros que coincidan.')
+          + '<i data-lucide="user-plus" class="w-10 h-10" style="margin: 0 auto 0.75rem; display: block;"></i>'
+          + '<div style="font-weight: 600; color: rgb(71 85 105);">Todavía no tienes ' + this.col + '</div>'
+          + '<p class="text-xs" style="margin-top: 0.5rem;">Crea el primero con <strong>Nuevo ' + this.cfg.singular + '</strong>.</p>'
           + '</div>';
       }
 
       return ''
-        + '<div class="table-wrap">'
-          + '<table class="table-std">'
+        + '<table class="table-std js-dt" data-dt-key="' + this.col + '" data-dt-buscar="Buscar por nombre, RUC/DNI o correo...">'
             + '<thead><tr>'
               + '<th>Documento</th><th>Razón social / Nombre</th><th>Contacto</th><th style="width: 5.5rem;"></th>'
             + '</tr></thead>'
@@ -138,8 +118,7 @@ var App = window.App || (window.App = {});
                 + '</tr>';
             }).join('')
             + '</tbody>'
-          + '</table>'
-        + '</div>';
+        + '</table>';
     }
 
     _formHTML() {
@@ -225,11 +204,6 @@ var App = window.App || (window.App = {});
         self._rerender();
       });
 
-      this.container.querySelector('#ct-buscar').addEventListener('input', function (e) {
-        self.q = e.target.value;
-        self._refrescarTabla();
-      });
-
       this._bindTabla();
 
       if (this.editando) {
@@ -248,27 +222,19 @@ var App = window.App || (window.App = {});
       }
     }
 
+    /** Delegado en #ct-tabla: con paginación las demás filas no están en el DOM. */
     _bindTabla() {
       var self = this;
-      this.container.querySelectorAll('[data-editar]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          self.editando = Object.assign({}, App.DB.find(self.col, btn.dataset.editar));
-          self.errorDoc = null;
-          self._rerender();
-        });
+      var raiz = this.container.querySelector('#ct-tabla');
+      App.delegarClick(raiz, '[data-editar]', function (btn) {
+        self.editando = Object.assign({}, App.DB.find(self.col, btn.dataset.editar));
+        self.errorDoc = null;
+        self._rerender();
       });
-      this.container.querySelectorAll('[data-borrar]').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          self.eliminando = App.DB.find(self.col, btn.dataset.borrar);
-          self._rerender();
-        });
+      App.delegarClick(raiz, '[data-borrar]', function (btn) {
+        self.eliminando = App.DB.find(self.col, btn.dataset.borrar);
+        self._rerender();
       });
-    }
-
-    _refrescarTabla() {
-      this.container.querySelector('#ct-tabla').innerHTML = this._tablaHTML();
-      App.refreshIcons();
-      this._bindTabla();
     }
 
     _rerender() {

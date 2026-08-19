@@ -1,25 +1,23 @@
 var App = window.App || (window.App = {});
 
 /**
- * Capa de datos del sistema. Sirve para cualquier rubro: el catálogo de
- * productos, clientes y proveedores sale del rubro que el negocio elige.
+ * Capa de datos del sistema.
  *
- * Cómo funciona:
- *   1. data/seed.js define App.SEED con los rubros, la empresa y el catálogo
- *      de ejemplo de cada rubro. Se carga con <script src>, así que el sistema
- *      funciona igual abriendo index.html con doble clic (file://) que servido
- *      por HTTP. No se usa fetch para los datos.
- *   2. Al elegir rubro se copia su catálogo a localStorage; desde ahí se lee
- *      y escribe todo (el navegador no puede escribir en el disco).
- *   3. Para dejar los cambios fijos en el proyecto: Configuración → Exportar
- *      JSON, reemplazar los archivos de data/ y ejecutar `node data/build-seed.js`.
+ * El sistema se entrega VACÍO: no hay productos, clientes ni ningún dato de
+ * ejemplo. Cada negocio carga los suyos, y todo vive en el localStorage de su
+ * navegador (el navegador no puede escribir en el disco).
  *
- * Los .json de data/ siguen siendo la fuente editable; data/seed.js se genera
- * a partir de ellos.
+ * data/seed.js solo aporta los rubros —nombre, icono y color, para la
+ * identidad visual— y la ficha vacía de la empresa. Se carga con <script src>
+ * y no con fetch, para que el sistema funcione igual abriendo index.html con
+ * doble clic (file://) que servido por HTTP.
+ *
+ * Los .json de data/ son la fuente editable; data/seed.js se genera a partir
+ * de ellos con `node data/build-seed.js`.
  */
 (function () {
   var PREFIX = 'sistema_v1_';
-  var COLS = ['productos', 'clientes', 'proveedores', 'compras', 'inventario'];
+  var COLS = ['productos', 'categorias', 'clientes', 'proveedores', 'compras', 'inventario'];
 
   var cache = {};
   var empresa = null;
@@ -73,17 +71,56 @@ var App = window.App || (window.App = {});
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
 
-  function vaciarColecciones() {
-    COLS.forEach(function (col) { cache[col] = []; escribirLocal(col, []); });
+  /**
+   * Carga en memoria lo que el negocio ya tiene guardado. Una colección que
+   * todavía no existe arranca vacía. Nunca se pisa lo que hay en localStorage.
+   * Devuelve los nombres de las colecciones que no existían.
+   */
+  function cargarColecciones() {
+    var nuevas = [];
+    COLS.forEach(function (col) {
+      var local = leerLocal(col);
+      if (Array.isArray(local)) { cache[col] = local; return; }
+      cache[col] = [];
+      escribirLocal(col, cache[col]);
+      nuevas.push(col);
+    });
+    return nuevas;
+  }
+
+  /**
+   * El producto guarda el NOMBRE de su categoría, no un id. Esta función
+   * levanta el catálogo de categorías a partir de los nombres que ya usan los
+   * productos: sirve para los catálogos de ejemplo (que no traen categorías
+   * sueltas) y para los negocios que venían de antes de que existiera el
+   * módulo. Solo se llama cuando la colección aún no existía.
+   */
+  function derivarCategorias() {
+    var vistas = {};
+    var nuevas = [];
+    (cache.productos || []).forEach(function (p) {
+      var nombre = (p.categoria || '').trim();
+      if (!nombre || vistas[nombre]) return;
+      vistas[nombre] = true;
+      nuevas.push(nombre);
+    });
+
+    cache.categorias = nuevas.sort().map(function (nombre, i) {
+      return { id: i + 1, nombre: nombre, descripcion: '', activo: true };
+    });
+    escribirLocal('categorias', cache.categorias);
+    return cache.categorias.length;
   }
 
   App.DB = {
     COLECCIONES: COLS,
 
     /**
-     * Carga rubros, empresa y las 5 colecciones. Si el negocio todavía no
-     * eligió rubro, las colecciones arrancan vacías: el negocio carga sus
-     * propios datos o un catálogo de ejemplo desde Configuración.
+     * Carga rubros, empresa y las colecciones desde localStorage.
+     *
+     * Regla que no se rompe: los datos del negocio mandan. Arrancar el sistema
+     * jamás borra, reemplaza ni inventa nada. Lo que no existe todavía arranca
+     * vacío, y punto.
      */
     init: function () {
       try {
@@ -96,20 +133,15 @@ var App = window.App || (window.App = {});
           escribirLocal('empresa', empresa);
         }
 
-        if (!empresa.rubro) {
-          vaciarColecciones();
-          return Promise.resolve(true);
+        var nuevas = cargarColecciones();
+
+        // Negocio que ya tenía productos antes de que existiera el módulo de
+        // categorías: se le arma el catálogo con lo que ya usaba
+        if (nuevas.indexOf('categorias') !== -1 && (cache.productos || []).length > 0) {
+          derivarCategorias();
         }
 
-        var faltantes = COLS.filter(function (col) {
-          var local = leerLocal(col);
-          if (Array.isArray(local)) { cache[col] = local; return false; }
-          return true;
-        });
-        if (faltantes.length === 0) return Promise.resolve(true);
-
-        // Primera vez con este rubro: se copia su catálogo de ejemplo
-        return App.DB.aplicarRubro(empresa.rubro);
+        return Promise.resolve(true);
       } catch (e) {
         return Promise.reject(e);
       }
@@ -133,19 +165,15 @@ var App = window.App || (window.App = {});
       return rubros.find(function (r) { return r.id === (id || (empresa && empresa.rubro)); }) || null;
     },
 
-    /** Copia el catálogo de ejemplo del rubro y lo deja como datos del negocio. */
-    aplicarRubro: function (id) {
+    /**
+     * Fija el rubro del negocio. Solo afecta a la identidad visual (nombre,
+     * icono y color del sistema): NO toca ni un dato. El sistema se entrega
+     * vacío y cada negocio carga lo suyo.
+     */
+    elegirRubro: function (id) {
       try {
-        var cat = semilla().catalogos[id];
-        if (!cat) throw new Error('No existe el catálogo del rubro "' + id + '".');
-
-        COLS.forEach(function (col) {
-          // Se clona para no dejar que la edición del negocio toque la semilla
-          cache[col] = Array.isArray(cat[col]) ? clonar(cat[col]) : [];
-          escribirLocal(col, cache[col]);
-        });
+        if (!App.DB.rubro(id)) throw new Error('No existe el rubro "' + id + '".');
         App.DB.guardarEmpresa({ rubro: id });
-        COLS.forEach(emitir);
         return Promise.resolve(true);
       } catch (e) {
         return Promise.reject(e);
@@ -199,10 +227,70 @@ var App = window.App || (window.App = {});
       return App.DB.all('productos').find(function (p) { return p.codigo === codigo; }) || null;
     },
 
-    categorias: function () {
-      var vistas = {};
-      App.DB.all('productos').forEach(function (p) { if (p.categoria) vistas[p.categoria] = true; });
-      return Object.keys(vistas).sort();
+    // ─── Categorías ───────────────────────────────────────────────
+    /**
+     * El producto guarda el nombre de la categoría, no su id. Es lo que ya
+     * hacían los catálogos de ejemplo y las pantallas que la muestran, así que
+     * el módulo administra ese catálogo y arrastra el nombre al renombrar.
+     */
+    categoriasActivas: function () {
+      return App.DB.all('categorias')
+        .filter(function (c) { return c.activo !== false; })
+        .sort(function (a, b) { return a.nombre.localeCompare(b.nombre, 'es'); });
+    },
+
+    categoriaPorNombre: function (nombre) {
+      var buscado = (nombre || '').trim().toLowerCase();
+      return App.DB.all('categorias').find(function (c) {
+        return c.nombre.toLowerCase() === buscado;
+      }) || null;
+    },
+
+    /** Cuántos productos usa cada categoría, indexado por nombre. */
+    contarProductosPorCategoria: function () {
+      var cuenta = {};
+      App.DB.all('productos').forEach(function (p) {
+        var n = (p.categoria || '').trim();
+        if (n) cuenta[n] = (cuenta[n] || 0) + 1;
+      });
+      return cuenta;
+    },
+
+    /**
+     * Alta o edición. Al renombrar hay que arrastrar el nombre nuevo a todos
+     * los productos que la usaban, o se quedarían apuntando a una categoría
+     * que ya no existe.
+     */
+    guardarCategoria: function (datos, id) {
+      if (!id) return App.DB.insert('categorias', datos);
+
+      var actual = App.DB.find('categorias', id);
+      if (!actual) return null;
+      var anterior = actual.nombre;
+
+      var guardada = App.DB.update('categorias', id, datos);
+      if (anterior !== guardada.nombre) {
+        var tocados = 0;
+        cache.productos.forEach(function (p) {
+          if (p.categoria === anterior) { p.categoria = guardada.nombre; tocados++; }
+        });
+        if (tocados > 0) persistir('productos');
+      }
+      return guardada;
+    },
+
+    /** No se borra una categoría con productos dentro: se avisa cuántos son. */
+    eliminarCategoria: function (id) {
+      var cat = App.DB.find('categorias', id);
+      if (!cat) return { ok: false, motivo: 'no-existe', productos: 0 };
+
+      var enUso = App.DB.all('productos').filter(function (p) {
+        return p.categoria === cat.nombre;
+      }).length;
+      if (enUso > 0) return { ok: false, motivo: 'en-uso', productos: enUso };
+
+      App.DB.remove('categorias', id);
+      return { ok: true, productos: 0 };
     },
 
     // ─── Inventario ───────────────────────────────────────────────
@@ -339,10 +427,32 @@ var App = window.App || (window.App = {});
       return encontradas;
     },
 
-    /** Vuelve a copiar el catálogo de ejemplo del rubro actual. */
-    restaurarSemilla: function () {
-      if (!empresa || !empresa.rubro) return Promise.reject(new Error('Todavía no eliges un rubro.'));
-      return App.DB.aplicarRubro(empresa.rubro);
+    // ─── Borrado ──────────────────────────────────────────────────
+    /**
+     * Deja el negocio en cero: vacía todas las colecciones y la ficha de la
+     * empresa. No hay vuelta atrás; lo único recuperable es lo que se haya
+     * exportado antes a JSON.
+     *
+     * No toca el usuario ni las credenciales SUNAT: viven bajo otro prefijo y
+     * los gestiona js/store.js (ver App.borrarCuenta).
+     *
+     * Devuelve cuántos registros había en cada colección, para informarlo.
+     */
+    borrarDatos: function () {
+      var borrado = {};
+
+      COLS.forEach(function (col) {
+        borrado[col] = (cache[col] || []).length;
+        cache[col] = [];
+        escribirLocal(col, cache[col]);
+      });
+
+      empresa = clonar(semilla().empresa);
+      escribirLocal('empresa', empresa);
+
+      COLS.forEach(emitir);
+      emitir('empresa');
+      return borrado;
     },
   };
 })();
